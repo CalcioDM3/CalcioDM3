@@ -1,0 +1,14 @@
+{
+    "valutatore": "Claudio Bernardi",
+    "timestamp": "2025-06-20T09:15:36Z",
+    "valutazioni": {
+        "Domenico Filannino": {
+            "Tiro": 50,
+            "Velocit\u00e0": 50,
+            "Tecnica": 50,
+            "Difesa": 50,
+            "Fisico": 87,
+            "Visione": 50
+        }
+    }
+}
