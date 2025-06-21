@@ -1,0 +1,14 @@
+{
+    "valutatore": "Gianmarco Saponaro",
+    "timestamp": "2025-06-21T13:46:41Z",
+    "valutazioni": {
+        "Domenico Filannino": {
+            "Tiro": 50,
+            "Velocit\u00e0": 79,
+            "Tecnica": 50,
+            "Difesa": 91,
+            "Fisico": 29,
+            "Visione": 75
+        }
+    }
+}
