@@ -1,6 +1,6 @@
 {
     "valutatore": "Gianmarco Saponaro",
-    "timestamp": "2025-06-21T13:47:29Z",
+    "timestamp": "2025-06-23T17:44:19Z",
     "valutazioni": {
         "Domenico Filannino": {
             "Tiro": 50,
@@ -9,6 +9,30 @@
             "Difesa": 91,
             "Fisico": 29,
             "Visione": 75
+        },
+        "Davide Ninni": {
+            "Tiro": 50,
+            "Velocit\u00e0": 50,
+            "Tecnica": 86,
+            "Difesa": 50,
+            "Fisico": 50,
+            "Visione": 50
+        },
+        "Angelo Ugenti": {
+            "Tiro": 50,
+            "Velocit\u00e0": 50,
+            "Tecnica": 50,
+            "Difesa": 50,
+            "Fisico": 3,
+            "Visione": 50
+        },
+        "Claudio Bernardi": {
+            "Tiro": 50,
+            "Velocit\u00e0": 50,
+            "Tecnica": 50,
+            "Difesa": 100,
+            "Fisico": 50,
+            "Visione": 50
         }
     }
 }
