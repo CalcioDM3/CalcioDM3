@@ -1,0 +1,91 @@
+:root {
+    --primary-color: #A5E090;
+    --secondary-color: #4A752C;
+    --text-color: #000000;
+    --light-gray: #F0F0F0;
+    --border-radius: 8px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 20px;
+}
+
+#app-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-height: 90vh;
+    overflow: hidden;
+}
+
+#loading-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.spinner {
+    border: 5px solid var(--light-gray);
+    border-top: 5px solid var(--secondary-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.screen {
+    padding: 20px;
+    display: none;
+}
+
+.active {
+    display: block;
+}
+
+.header {
+    text-align: center;
+    padding: 20px 0;
+    background-color: var(--secondary-color);
+    color: white;
+    margin-bottom: 20px;
+}
+
+.btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 16px;
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #3a5c22;
+}
+
+/* Stili aggiuntivi verranno inclusi nei prossimi passi */
