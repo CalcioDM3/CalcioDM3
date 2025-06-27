@@ -718,6 +718,224 @@ class FootballApp:
         """
         self.display_html(html)
     
+    def create_new_player_screen_web(self):
+        html = """
+        <div class="new-player-screen">
+            <div class="header">
+                <h1>Nuovo Giocatore</h1>
+            </div>
+            
+            <div class="content">
+                <div class="image-section">
+                    <img id="player-image-preview" src="assets/placeholder.jpg" alt="Anteprima immagine" class="player-image">
+                    <button onclick="document.getElementById('player-image-input').click()" class="btn">Carica Foto</button>
+                    <input type="file" id="player-image-input" accept="image/*" style="display: none;" onchange="app.previewImage(event)">
+                </div>
+                
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="player-nome">Nome:</label>
+                        <input type="text" id="player-nome" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="player-cognome">Cognome:</label>
+                        <input type="text" id="player-cognome" class="form-input">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button onclick="app.savePlayer()" class="btn">Salva</button>
+                <button onclick="app.showScreen('main-menu')" class="btn">Indietro</button>
+            </div>
+        </div>
+        """
+        self.display_html(html)
+    
+    def create_delete_player_screen_web(self):
+        # Genera la lista dei giocatori come griglia
+        players_html = ""
+        for player in self.players:
+            img_url = self.github_manager.get_player_image(player) or "assets/placeholder.jpg"
+            players_html += f"""
+            <div class="player-card" onclick="app.confirmDeletePlayer({player['id']})">
+                <img src="{img_url}" alt="{player['nome']}" class="player-thumb">
+                <div class="player-name">{player['nome']} {player['cognome']}</div>
+            </div>
+            """
+        
+        html = f"""
+        <div class="delete-player-screen">
+            <div class="header">
+                <h1>Elimina Giocatore</h1>
+                <p>Clicca su un giocatore per eliminarlo</p>
+            </div>
+            
+            <div class="player-grid">
+                {players_html}
+            </div>
+            
+            <div class="actions">
+                <button onclick="app.showScreen('main-menu')" class="btn">Indietro</button>
+            </div>
+        </div>
+        """
+        self.display_html(html)
+    
+    def create_rate_players_screen_web(self):
+        # Genera la lista dei giocatori come griglia
+        players_html = ""
+        for player in self.players:
+            img_url = self.github_manager.get_player_image(player) or "assets/placeholder.jpg"
+            players_html += f"""
+            <div class="player-card" onclick="app.ratePlayer({player['id']})">
+                <img src="{img_url}" alt="{player['nome']}" class="player-thumb">
+                <div class="player-name">{player['nome']} {player['cognome']}</div>
+            </div>
+            """
+        
+        html = f"""
+        <div class="rate-players-screen">
+            <div class="header">
+                <h1>Valuta Giocatori</h1>
+                <p>Clicca su un giocatore per valutarlo</p>
+            </div>
+            
+            <div class="player-grid">
+                {players_html}
+            </div>
+            
+            <div class="actions">
+                <button onclick="app.showScreen('main-menu')" class="btn">Indietro</button>
+            </div>
+        </div>
+        """
+        self.display_html(html)
+    
+    def create_rate_player_screen_web(self, player_id):
+        player = next((p for p in self.players if p['id'] == player_id), None)
+        if not player:
+            self.web_alert("Errore", "Giocatore non trovato")
+            return
+        
+        player_full_name = f"{player['nome']} {player['cognome']}"
+        valutazioni_precedenti = self.user_ratings_cache.get('valutazioni', {}).get(player_full_name, {})
+        
+        # Costruisci i slider per ogni skill
+        skills = ["Tiro", "Velocità", "Tecnica", "Difesa", "Fisico", "Visione"]
+        sliders_html = ""
+        for skill in skills:
+            valore = valutazioni_precedenti.get(skill, 50)
+            sliders_html += f"""
+            <div class="skill-row">
+                <label>{skill}</label>
+                <input type="range" min="0" max="100" value="{valore}" class="skill-slider" id="slider-{skill}">
+                <span id="value-{skill}">{valore}</span>
+            </div>
+            """
+        
+        html = f"""
+        <div class="rate-player-screen">
+            <div class="header">
+                <h1>Valuta {player['nome']}</h1>
+            </div>
+            
+            <div class="skills-container">
+                {sliders_html}
+            </div>
+            
+            <div class="actions">
+                <button onclick="app.saveRating({player_id})" class="btn">Salva Valutazione</button>
+                <button onclick="app.showScreen('rate-players')" class="btn">Annulla</button>
+            </div>
+        </div>
+        <script>
+            // Aggiorna i valori quando si muove lo slider
+            document.querySelectorAll('.skill-slider').forEach(slider => {{
+                const skill = slider.id.split('-')[1];
+                slider.addEventListener('input', () => {{
+                    document.getElementById('value-' + skill).textContent = slider.value;
+                }});
+            }});
+        </script>
+        """
+        self.display_html(html)
+    
+    # ================================================
+    # GESTIONE EVENTI WEB (chiamati da JavaScript)
+    # ================================================
+    
+    def handle_web_event(self, event, data=None):
+        if event == "save_player":
+            return self.save_player_web(data)
+        elif event == "confirm_delete_player":
+            return self.confirm_delete_player_web(data)
+        elif event == "rate_player":
+            return self.rate_player_web(data)
+        elif event == "save_rating":
+            return self.save_rating_web(data)
+        else:
+            return {"status": "error", "message": "Evento non riconosciuto"}
+    
+    def save_player_web(self, data):
+        nome = data.get('nome')
+        cognome = data.get('cognome')
+        image_data = data.get('image')  # base64 o null
+        
+        if not nome or not cognome:
+            return {"status": "error", "message": "Inserisci nome e cognome"}
+        
+        player_data = {
+            'nome': nome,
+            'cognome': cognome
+        }
+        
+        # Salva l'immagine temporaneamente (in web, non abbiamo un percorso file)
+        image_path = None
+        if image_data:
+            # In un'app reale, qui dovremmo salvare l'immagine in un blob o in IndexedDB
+            # Per semplicità, passiamo l'immagine come base64 al metodo upload_player
+            pass
+        
+        # Carica il giocatore
+        if self.github_manager.upload_player(player_data, image_path):
+            return {"status": "success", "message": "Giocatore caricato con successo!"}
+        else:
+            return {"status": "error", "message": "Errore nel caricamento del giocatore"}
+    
+    def confirm_delete_player_web(self, player_id):
+        player = next((p for p in self.players if p['id'] == player_id), None)
+        if not player:
+            return {"status": "error", "message": "Giocatore non trovato"}
+        
+        if self.github_manager.delete_player(player):
+            self.load_players()
+            return {"status": "success", "message": "Giocatore eliminato con successo!"}
+        else:
+            return {"status": "error", "message": "Errore durante l'eliminazione"}
+    
+    def rate_player_web(self, player_id):
+        # Mostra la schermata di valutazione
+        self.create_rate_player_screen_web(player_id)
+        return {"status": "success"}
+    
+    def save_rating_web(self, data):
+        player_id = data.get('player_id')
+        ratings = data.get('ratings')  # Dizionario {skill: valore}
+        
+        player = next((p for p in self.players if p['id'] == player_id), None)
+        if not player:
+            return {"status": "error", "message": "Giocatore non trovato"}
+        
+        player_full_name = f"{player['nome']} {player['cognome']}"
+        if 'valutazioni' not in self.user_ratings_cache:
+            self.user_ratings_cache['valutazioni'] = {}
+        
+        self.user_ratings_cache['valutazioni'][player_full_name] = ratings
+        
+        return {"status": "success", "message": "Valutazione salvata!"}
+    
     def display_html(self, html):
         if WEB_MODE:
             from js import updateUI
