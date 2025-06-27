@@ -3,7 +3,10 @@
     --secondary-color: #4A752C;
     --text-color: #000000;
     --light-gray: #F0F0F0;
+    --medium-gray: #D0D0D0;
+    --dark-gray: #888888;
     --border-radius: 8px;
+    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -36,6 +39,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    background-color: white;
 }
 
 .spinner {
@@ -53,24 +57,17 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-.screen {
-    padding: 20px;
-    display: none;
-}
-
-.active {
-    display: block;
-}
-
-.header {
+.error-screen {
     text-align: center;
-    padding: 20px 0;
-    background-color: var(--secondary-color);
-    color: white;
-    margin-bottom: 20px;
+    padding: 20px;
 }
 
-.btn {
+.error-screen h2 {
+    color: #d32f2f;
+    margin-bottom: 15px;
+}
+
+.error-screen button {
     background-color: var(--secondary-color);
     color: white;
     border: none;
@@ -78,14 +75,246 @@ body {
     border-radius: var(--border-radius);
     cursor: pointer;
     font-size: 16px;
+    margin-top: 20px;
+}
+
+/* Schermate comuni */
+.screen {
+    padding: 20px;
+}
+
+.header {
+    text-align: center;
+    padding: 15px 0;
+    background-color: var(--secondary-color);
+    color: white;
+    margin-bottom: 20px;
+    border-radius: var(--border-radius);
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.header p {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 16px;
     display: block;
     width: 100%;
     margin: 10px 0;
     transition: background-color 0.3s;
+    font-weight: 600;
 }
 
 .btn:hover {
     background-color: #3a5c22;
 }
 
-/* Stili aggiuntivi verranno inclusi nei prossimi passi */
+.btn-secondary {
+    background-color: var(--medium-gray);
+}
+
+.btn-secondary:hover {
+    background-color: var(--dark-gray);
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.actions .btn {
+    margin: 0;
+    flex: 1;
+}
+
+/* Schermata di Login */
+.login-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 0 20px;
+}
+
+.form-input {
+    padding: 12px 15px;
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    width: 100%;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(74, 117, 44, 0.2);
+}
+
+.logo-container {
+    margin-top: auto;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.logo {
+    max-width: 150px;
+    height: auto;
+}
+
+/* Menu principale */
+.main-menu {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.menu-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 10px;
+}
+
+/* Schermata Nuovo Giocatore */
+.new-player-screen .content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.image-section {
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+}
+
+.player-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--secondary-color);
+    margin-bottom: 15px;
+    background-color: var(--light-gray);
+}
+
+.form-section {
+    flex: 2;
+    min-width: 250px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+/* Griglia giocatori */
+.player-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.player-card {
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: var(--box-shadow);
+}
+
+.player-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.player-thumb {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    background-color: var(--light-gray);
+}
+
+.player-name {
+    padding: 10px 5px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background-color: white;
+}
+
+/* Schermata di Valutazione */
+.rate-player-screen {
+    padding: 0 10px;
+}
+
+.skills-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.skill-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.skill-row label {
+    flex: 1;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+.skill-slider {
+    flex: 3;
+    height: 25px;
+}
+
+.skill-row span {
+    flex: 0 0 40px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .new-player-screen .content {
+        flex-direction: column;
+    }
+    
+    .player-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+    
+    .player-thumb {
+        height: 80px;
+    }
+}
