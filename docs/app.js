@@ -201,4 +201,11 @@ async function initPyodide() {
     }
 }
 
-initPyodide();
+// Avvia Pyodide solo se tutto è pronto
+window.addEventListener('DOMContentLoaded', () => {
+    if (window.loadPyodide) {
+        initPyodide();
+    } else {
+        console.error("loadPyodide non è definito!");
+    }
+});
