@@ -15,6 +15,55 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       
+    - name: Prepare docs directory
+      run: |
+        mkdir -p docs
+        cp main.py docs/
+        cp styles.css docs/
+        cp -r assets docs/
+        # Create Pyodide entry point
+        cat << 'EOF' > docs/index.html
+        <!DOCTYPE html>
+        <html lang="it">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>CalcioDM3 Companion - Web</title>
+            <link rel="stylesheet" href="styles.css">
+        </head>
+        <body>
+            <div id="app-container"></div>
+            <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+            <script type="text/javascript">
+                async function main() {
+                    let pyodide = await loadPyodide({
+                        indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"
+                    });
+                    
+                    await pyodide.runPythonAsync(`
+                        import sys
+                        sys.running_in_web = True
+                        import pyodide_http
+                        pyodide_http.patch_all()
+                    `);
+                    
+                    await pyodide.runPythonAsync(`
+                        from main import FootballApp
+                        app = FootballApp()
+                        app.run_web()
+                    `);
+                }
+                
+                function updateUI(html) {
+                    document.getElementById('app-container').innerHTML = html;
+                }
+                
+                main();
+            </script>
+        </body>
+        </html>
+        EOF
+        
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
       with:
