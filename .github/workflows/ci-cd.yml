@@ -19,7 +19,7 @@ jobs:
       run: |
         mkdir -p docs
         cp main.py docs/
-        cp styles.css docs/
+        cp styles.css docs/  # This file is in root
         cp -r assets docs/
         # Create Pyodide entry point
         cat << 'EOF' > docs/index.html
@@ -40,6 +40,7 @@ jobs:
                         indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"
                     });
                     
+                    // Patch for requests
                     await pyodide.runPythonAsync(`
                         import sys
                         sys.running_in_web = True
@@ -47,6 +48,7 @@ jobs:
                         pyodide_http.patch_all()
                     `);
                     
+                    // Load main application
                     await pyodide.runPythonAsync(`
                         from main import FootballApp
                         app = FootballApp()
@@ -54,6 +56,7 @@ jobs:
                     `);
                 }
                 
+                // Make updateUI available globally
                 function updateUI(html) {
                     document.getElementById('app-container').innerHTML = html;
                 }
