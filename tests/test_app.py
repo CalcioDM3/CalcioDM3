@@ -13,7 +13,7 @@ class TestFootballApp(unittest.TestCase):
     def test_run_desktop_success(self, mock_test_connection, mock_load_players):
         mock_test_connection.return_value = True
         
-        # Create root window with virtual display
+        # Create a real root window
         root = tk.Tk()
         root.withdraw()  # Hide the window
         
@@ -28,7 +28,7 @@ class TestFootballApp(unittest.TestCase):
     def test_run_desktop_failure(self, mock_test_connection, mock_showerror):
         mock_test_connection.return_value = False
         
-        # Create root window with virtual display
+        # Create a real root window
         root = tk.Tk()
         root.withdraw()  # Hide the window
         
@@ -44,7 +44,7 @@ class TestFootballApp(unittest.TestCase):
     def test_login_success(self, mock_credentials, mock_create_menu):
         mock_credentials.return_value = {'PIN': '1234'}
         
-        # Create root window with virtual display
+        # Create a real root window
         root = tk.Tk()
         root.withdraw()  # Hide the window
         
