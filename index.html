@@ -7,13 +7,36 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="app-container">
-        <div id="loading-screen">
-            <div class="spinner"></div>
-            <p>Caricamento in corso...</p>
-        </div>
-    </div>
-    
-    <script src="app.js"></script>
+    <div id="app-container"></div>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <script type="text/javascript">
+        async function main() {
+            let pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"
+            });
+            
+            // Patch for requests
+            await pyodide.runPythonAsync(`
+                import sys
+                sys.running_in_web = True
+                import pyodide_http
+                pyodide_http.patch_all()
+            `);
+            
+            // Load main application
+            await pyodide.runPythonAsync(`
+                from main import FootballApp
+                app = FootballApp()
+                app.run_web()
+            `);
+        }
+        
+        // Make updateUI available globally
+        function updateUI(html) {
+            document.getElementById('app-container').innerHTML = html;
+        }
+        
+        main();
+    </script>
 </body>
 </html>
