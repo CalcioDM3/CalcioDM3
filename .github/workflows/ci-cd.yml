@@ -82,6 +82,8 @@ jobs:
         cp requirements.txt docs/
          # Add .nojekyll to prevent processing
          touch docs/.nojekyll
+         # Rename main.py to main.txt to prevent processing
+         mv docs/main.py docs/main.txt
       
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
