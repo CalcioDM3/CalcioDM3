@@ -24,13 +24,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         sudo apt-get update
-        sudo apt-get install xvfb  # Install virtual display
+        sudo apt-get install xvfb
         
     - name: Run tests
       run: |
-        # Set up virtual display and run tests
         xvfb-run --auto-servernum pytest tests/
-            
+        
   build-desktop:
     runs-on: windows-latest
     needs: test
@@ -74,6 +73,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        persist-credentials: true  # Crucial for authentication
       
     - name: Prepare for Pages
       run: |
@@ -83,6 +84,6 @@ jobs:
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
       with:
-        github_token: ${{ secrets.TOKEN }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}  # Use built-in token
         publish_dir: ./docs
         keep_files: true
