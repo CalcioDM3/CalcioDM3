@@ -1,6 +1,5 @@
 import sys
 import os
-# Add parent directory to Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import unittest
@@ -13,9 +12,12 @@ class TestFootballApp(unittest.TestCase):
     def test_run_desktop_success(self, mock_test_connection, mock_load_players):
         mock_test_connection.return_value = True
         
-        # Simula l'ambiente desktop
-        with patch('main.tk.Tk'):
-            app = FootballApp()
+        # Create a mock root window
+        with patch('main.tk.Tk') as mock_tk:
+            mock_root = MagicMock()
+            mock_tk.return_value = mock_root
+            
+            app = FootballApp(mock_root)
             app.run_desktop()
         
         mock_load_players.assert_called_once()
@@ -25,9 +27,12 @@ class TestFootballApp(unittest.TestCase):
     def test_run_desktop_failure(self, mock_test_connection, mock_showerror):
         mock_test_connection.return_value = False
         
-        # Simula l'ambiente desktop
-        with patch('main.tk.Tk'):
-            app = FootballApp()
+        # Create a mock root window
+        with patch('main.tk.Tk') as mock_tk:
+            mock_root = MagicMock()
+            mock_tk.return_value = mock_root
+            
+            app = FootballApp(mock_root)
             with self.assertRaises(SystemExit):
                 app.run_desktop()
         
@@ -38,9 +43,12 @@ class TestFootballApp(unittest.TestCase):
     def test_login_success(self, mock_credentials, mock_create_menu):
         mock_credentials.return_value = {'PIN': '1234'}
         
-        # Simula l'ambiente
-        with patch('main.tk.Tk'):
-            app = FootballApp()
+        # Create a mock root window
+        with patch('main.tk.Tk') as mock_tk:
+            mock_root = MagicMock()
+            mock_tk.return_value = mock_root
+            
+            app = FootballApp(mock_root)
             app.nome_entry = MagicMock()
             app.nome_entry.get.return_value = "Mario"
             app.cognome_entry = MagicMock()
