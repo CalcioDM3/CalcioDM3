@@ -108,13 +108,40 @@ window.updateUI = function(htmlContent) {
     appContainer.innerHTML = htmlContent;
 };
 
+// Gestisce il caricamento efficiente di Pyodide
+window.loadPyodide = async function(config) {
+    if (!window.pyodide) {
+        // Carica lo script Pyodide se non è già presente
+        if (!window._pyodideLoading) {
+            window._pyodideLoading = true;
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = config.indexURL || 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js';
+                script.onload = () => resolve(window.loadPyodide(config));
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        return new Promise(resolve => {
+            const check = () => {
+                if (window.pyodide) resolve(window.pyodide);
+                else setTimeout(check, 100);
+            };
+            check();
+        });
+    }
+    
+    // Inizializza Pyodide
+    return window.pyodide;
+};
+
 // Inizializzazione Pyodide
 async function initPyodide() {
     const loadingScreen = document.getElementById('loading-screen');
     
     try {
         // Carica Pyodide
-        const pyodide = await loadPyodide({
+        const pyodide = await window.loadPyodide({
             indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
         });
         window.pyodide = pyodide;
@@ -129,8 +156,11 @@ async function initPyodide() {
         // Imposta il flag per indicare che siamo in web mode
         pyodide.runPython(`import sys; sys.running_in_web = True`);
         
-        // Carica il codice Python dalla repository
-        const response = await fetch('./main.py');
+        // Carica il codice Python dalla repository (usando raw URL)
+        const response = await fetch('https://raw.githubusercontent.com/CalcioDM3/CalcioDM3/main/main.py');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch main.py: ${response.status}`);
+        }
         const pythonCode = await response.text();
         
         // Esegui il codice Python
@@ -153,6 +183,7 @@ async function initPyodide() {
             <div class="error-screen">
                 <h2>Errore di caricamento</h2>
                 <p>${error.message}</p>
+                <p>Controlla la console per maggiori dettagli</p>
                 <button onclick="location.reload()">Ricarica</button>
             </div>
         `;
