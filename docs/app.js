@@ -130,7 +130,7 @@ async function initPyodide() {
         pyodide.runPython(`import sys; sys.running_in_web = True`);
         
         // Carica il codice Python dalla repository
-        const response = await fetch('https://raw.githubusercontent.com/CalcioDM3/CalcioDM3/main/main.py?cache=' + Date.now());
+       const response = await fetch('https://raw.githubusercontent.com/CalcioDM3/CalcioDM3/main/main.txt?cache=' + Date.now());
         if (!response.ok) {
             throw new Error(`Failed to fetch main.py: ${response.status}`);
         }
