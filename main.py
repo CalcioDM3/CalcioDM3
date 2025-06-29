@@ -396,10 +396,12 @@ class FootballApp:
     def __init__(self, root=None):
         if not WEB_MODE:
             self.root = root
-            self.root.title("CalcioDM3 - Companion")
-            self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
-            self.root.resizable(False, False)
-            self.root.configure(bg=BG_COLOR)
+            # Only set title if root exists
+            if self.root:
+                self.root.title("CalcioDM3 - Companion")
+                self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+                self.root.resizable(False, False)
+                self.root.configure(bg=BG_COLOR)
         
         self.current_user = {"nome": "", "cognome": ""}
         self.players = []
