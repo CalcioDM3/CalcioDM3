@@ -129,24 +129,612 @@ async function initPyodide() {
         // Imposta il flag per indicare che siamo in web mode
         pyodide.runPython(`import sys; sys.running_in_web = True`);
         
-        // Carica il codice Python dalla repository
-       const response = await fetch('https://raw.githubusercontent.com/CalcioDM3/CalcioDM3/main/main.txt?cache=' + Date.now());
-        if (!response.ok) {
-            throw new Error(`Failed to fetch main.py: ${response.status}`);
-        }
-        let pythonCode = await response.text();
-        
-        // Rimuovi eventuali tag HTML che potrebbero essersi inseriti
-        pythonCode = pythonCode.replace(/<style[\s\S]*?<\/style>/g, '');
-        pythonCode = pythonCode.replace(/<script[\s\S]*?<\/script>/g, '');
-        pythonCode = pythonCode.replace(/<[^>]+>/g, '');
-        
-        // Esegui il codice Python
-        await pyodide.runPythonAsync(pythonCode);
-        
-        // Avvia l'app
+        // Embedded Python code - Core functionality only
         await pyodide.runPythonAsync(`
-            from main import FootballApp
+import sys
+import json
+import threading
+import time
+import re
+import base64
+import os
+import requests
+from io import BytesIO
+
+# Verifica se siamo in modalità web (Pyodide)
+WEB_MODE = hasattr(sys, 'running_in_web')
+
+# Import condizionali per moduli specifici desktop
+if not WEB_MODE:
+    import tkinter as tk
+    from tkinter import ttk, filedialog, messagebox
+    from PIL import Image, ImageTk
+    import shutil
+
+# Risolve il problema del percorso delle risorse in PyInstaller (solo desktop)
+def resource_path(relative_path):
+    if not WEB_MODE and hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+# Dimensioni finestra principale in pixel (solo desktop)
+WINDOW_WIDTH = 380
+WINDOW_HEIGHT = 680
+
+# Colore sfondo principale
+BG_COLOR = "#A5E090"
+
+# Account admin
+ADMIN_USERS = ["Gianmarco Saponaro", "Marco D'Amato"]
+
+# Configurazione GitHub API
+GITHUB_USER = "CalcioDM3"
+GITHUB_REPO = "CalcioDM3"
+PLAYERS_FOLDER = "GIOCATORI"
+RATINGS_FOLDER = "VALUTAZIONI"
+USERS_FOLDER = "UTENTI"
+
+# Token GitHub preconfigurato
+GITHUB_TOKEN = "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"
+
+class GitHubManager:
+    def __init__(self):
+        self.token = GITHUB_TOKEN
+        self.base_url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents"
+        self.image_cache = {}
+    
+    def is_authenticated(self):
+        return self.token is not None and self.token != ""
+    
+    def get_headers(self):
+        return {
+            "Authorization": f"token {self.token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+    
+    def test_connection(self):
+        """Verifica la connessione a GitHub"""
+        try:
+            url = f"{self.base_url}/{PLAYERS_FOLDER}"
+            if WEB_MODE:
+                # Utilizza fetch se in web mode
+                from js import fetch
+                response = fetch(url, {
+                    'method': 'GET',
+                    'headers': self.get_headers()
+                })
+                return response.status == 200
+            else:
+                response = requests.get(url, headers=self.get_headers(), timeout=10)
+                return response.status_code == 200
+        except:
+            return False
+    
+    def download_players(self):
+        """Scarica tutti i giocatori da GitHub"""
+        players = []
+        try:
+            if not self.is_authenticated():
+                return players
+                
+            url = f"{self.base_url}/{PLAYERS_FOLDER}"
+            if WEB_MODE:
+                from js import fetch
+                response = fetch(url, {
+                    'method': 'GET',
+                    'headers': self.get_headers()
+                })
+                if response.status != 200:
+                    return players
+                files = response.json()
+            else:
+                response = requests.get(url, headers=self.get_headers(), timeout=10)
+                response.raise_for_status()
+                files = response.json()
+            
+            for file in files:
+                if file['name'].endswith('.json'):
+                    if WEB_MODE:
+                        content_response = fetch(file['download_url'])
+                        if content_response.status != 200:
+                            continue
+                        content_text = content_response.text()
+                        player_data = json.loads(content_text)
+                    else:
+                        content_response = requests.get(file['download_url'], timeout=10)
+                        content_response.raise_for_status()
+                        player_data = json.loads(content_response.text)
+                    
+                    # Cerca l'immagine associata
+                    base_name = os.path.splitext(file['name'])[0]
+                    img_file = next((f for f in files if f['name'].startswith(base_name) and 
+                                    f['name'].lower().endswith(('.png', '.jpg', '.jpeg'))), None)
+                    
+                    if img_file:
+                        player_data['image_url'] = img_file['download_url']
+                    
+                    players.append(player_data)
+        
+        except Exception as e:
+            print(f"Errore download giocatori: {str(e)}")
+            if not WEB_MODE:
+                messagebox.showerror("Errore", f"Impossibile scaricare i giocatori:\\n{str(e)}")
+        
+        return players
+    
+    def get_player_image(self, player_data, size=(50, 50)):
+        """Ottiene l'immagine del giocatore"""
+        if 'image_url' not in player_data:
+            return None
+            
+        cache_key = f"{player_data['image_url']}_{size[0]}_{size[1]}"
+        if cache_key in self.image_cache:
+            return self.image_cache[cache_key]
+            
+        try:
+            if WEB_MODE:
+                # In web mode restituiamo direttamente l'URL
+                return player_data['image_url']
+            else:
+                response = requests.get(player_data['image_url'], timeout=10)
+                if response.status_code == 200:
+                    img = Image.open(BytesIO(response.content))
+                    img = img.resize(size, Image.LANCZOS)
+                    photo = ImageTk.PhotoImage(img)
+                    self.image_cache[cache_key] = photo
+                    return photo
+        except Exception as e:
+            print(f"Errore download immagine: {str(e)}")
+        
+        return None
+    
+    def upload_file(self, path, content, message):
+        """Carica un file su GitHub"""
+        try:
+            if not self.is_authenticated():
+                return False
+                
+            # Controlla se il file esiste già
+            url = f"{self.base_url}/{path}"
+            headers = self.get_headers()
+            
+            # Prepara i dati
+            data = {
+                "message": message,
+                "content": base64.b64encode(content).decode('utf-8'),
+                "branch": "main"
+            }
+            
+            # Prova a ottenere SHA del file esistente
+            if WEB_MODE:
+                from js import fetch
+                response = fetch(url, {
+                    'method': 'GET',
+                    'headers': headers
+                })
+                if response.status == 200:
+                    file_info = response.json()
+                    data["sha"] = file_info.get("sha")
+            else:
+                try:
+                    response = requests.get(url, headers=headers, timeout=10)
+                    if response.status_code == 200:
+                        data["sha"] = response.json().get("sha")
+                except:
+                    pass
+            
+            # Carica il file
+            if WEB_MODE:
+                response = fetch(url, {
+                    'method': 'PUT',
+                    'headers': headers,
+                    'body': json.dumps(data)
+                })
+                return response.status == 200
+            else:
+                response = requests.put(url, headers=headers, json=data, timeout=10)
+                response.raise_for_status()
+                return True
+        except Exception as e:
+            print(f"Errore upload file: {str(e)}")
+            return False
+    
+    async def upload_player(self, player_data, image_path):
+        """Carica un nuovo giocatore su GitHub (async per web)"""
+        try:
+            # Salva dati giocatore
+            json_content = json.dumps(player_data, indent=4).encode('utf-8')
+            json_path = f"{PLAYERS_FOLDER}/{player_data['nome']}_{player_data['cognome']}.json"
+            
+            if not self.upload_file(json_path, json_content, f"Aggiunto giocatore {player_data['nome']}"):
+                return False
+            
+            # Se c'è un'immagine, caricala
+            if image_path:
+                if WEB_MODE:
+                    # In web mode, image_path è un blob URL
+                    from js import fetch
+                    response = await fetch(image_path)
+                    if response.status != 200:
+                        return False
+                    array_buffer = await response.arrayBuffer()
+                    img_content = array_buffer.to_bytes()
+                else:
+                    if not os.path.exists(image_path):
+                        return False
+                    with open(image_path, 'rb') as img_file:
+                        img_content = img_file.read()
+                
+                img_ext = ".png"  # Assumiamo PNG in web mode
+                if not WEB_MODE:
+                    img_ext = os.path.splitext(image_path)[1]
+                img_path = f"{PLAYERS_FOLDER}/{player_data['nome']}_{player_data['cognome']}{img_ext}"
+                
+                if not self.upload_file(img_path, img_content, f"Immagine per {player_data['nome']}"):
+                    return False
+            
+            return True
+        except Exception as e:
+            print(f"Errore upload giocatore: {str(e)}")
+            return False
+    
+    def upload_ratings(self, ratings_data):
+        """Carica valutazioni su GitHub"""
+        try:
+            safe_name = re.sub(r'[^a-zA-Z0-9]', '_', ratings_data['valutatore'])
+            filename = f"Valutazioni_{safe_name}.json"
+            json_content = json.dumps(ratings_data, indent=4).encode('utf-8')
+            path = f"{RATINGS_FOLDER}/{filename}"
+            
+            return self.upload_file(path, json_content, f"Valutazioni di {ratings_data['valutatore']}")
+        except Exception as e:
+            print(f"Errore upload valutazioni: {str(e)}")
+            return False
+
+    def download_user_ratings(self, username):
+        """Scarica le valutazioni specifiche di un utente"""
+        try:
+            if not self.is_authenticated():
+                return None
+
+            safe_name = re.sub(r'[^a-zA-Z0-9]', '_', username)
+            filename = f"Valutazioni_{safe_name}.json"
+            url = f"{self.base_url}/{RATINGS_FOLDER}/{filename}"
+            
+            if WEB_MODE:
+                from js import fetch
+                response = fetch(url, headers=self.get_headers())
+                if response.status != 200:
+                    return None
+                file_content = response.json()
+                content = file_content['content']
+                decoded_content = base64.b64decode(content).decode('utf-8')
+                return json.loads(decoded_content)
+            else:
+                response = requests.get(url, headers=self.get_headers(), timeout=10)
+                if response.status_code == 200:
+                    content = response.json()['content']
+                    decoded_content = base64.b64decode(content).decode('utf-8')
+                    return json.loads(decoded_content)
+        except:
+            return None
+
+    def download_user_credentials(self, nome, cognome):
+        """Scarica le credenziali dell'utente"""
+        try:
+            if not self.is_authenticated():
+                return None
+
+            safe_name = f"{nome}_{cognome}".replace(' ', '_')
+            filename = f"{safe_name}.json"
+            url = f"{self.base_url}/{USERS_FOLDER}/{filename}"
+            
+            if WEB_MODE:
+                from js import fetch
+                response = fetch(url, headers=self.get_headers())
+                if response.status != 200:
+                    return None
+                file_content = response.json()
+                content = file_content['content']
+                decoded_content = base64.b64decode(content).decode('utf-8')
+                return json.loads(decoded_content)
+            else:
+                response = requests.get(url, headers=self.get_headers(), timeout=10)
+                if response.status_code == 200:
+                    content = response.json()['content']
+                    decoded_content = base64.b64decode(content).decode('utf-8')
+                    return json.loads(decoded_content)
+        except:
+            return None
+
+    def delete_player(self, player_data):
+        """Elimina un giocatore dal repository GitHub"""
+        try:
+            base_name = f"{player_data['nome']}_{player_data['cognome']}"
+            json_path = f"{PLAYERS_FOLDER}/{base_name}.json"
+            json_url = f"{self.base_url}/{json_path}"
+            
+            if WEB_MODE:
+                from js import fetch
+                response = fetch(json_url, headers=self.get_headers())
+                if response.status == 200:
+                    file_info = response.json()
+                    sha = file_info.get("sha")
+                    data = {
+                        "message": f"Eliminato giocatore {player_data['nome']}",
+                        "sha": sha,
+                        "branch": "main"
+                    }
+                    delete_response = fetch(json_url, {
+                        'method': 'DELETE',
+                        'headers': self.get_headers(),
+                        'body': json.dumps(data)
+                    })
+                    if delete_response.status != 200:
+                        return False
+            else:
+                response = requests.get(json_url, headers=self.get_headers(), timeout=10)
+                if response.status_code == 200:
+                    sha = response.json().get("sha")
+                    data = {
+                        "message": f"Eliminato giocatore {player_data['nome']}",
+                        "sha": sha,
+                        "branch": "main"
+                    }
+                    delete_response = requests.delete(json_url, headers=self.get_headers(), json=data, timeout=10)
+                    if delete_response.status_code != 200:
+                        return False
+            
+            if 'image_url' in player_data:
+                img_filename = player_data['image_url'].split('/')[-1]
+                img_path = f"{PLAYERS_FOLDER}/{img_filename}"
+                img_url = f"{self.base_url}/{img_path}"
+                
+                if WEB_MODE:
+                    response = fetch(img_url, headers=self.get_headers())
+                    if response.status == 200:
+                        file_info = response.json()
+                        sha = file_info.get("sha")
+                        data = {
+                            "message": f"Eliminata immagine per {player_data['nome']}",
+                            "sha": sha,
+                            "branch": "main"
+                        }
+                        delete_response = fetch(img_url, {
+                            'method': 'DELETE',
+                            'headers': self.get_headers(),
+                            'body': json.dumps(data)
+                        })
+                        if delete_response.status != 200:
+                            return False
+                else:
+                    response = requests.get(img_url, headers=self.get_headers(), timeout=10)
+                    if response.status_code == 200:
+                        sha = response.json().get("sha")
+                        data = {
+                            "message": f"Eliminata immagine per {player_data['nome']}",
+                            "sha": sha,
+                            "branch": "main"
+                        }
+                        delete_response = requests.delete(img_url, headers=self.get_headers(), json=data, timeout=10)
+                        if delete_response.status_code != 200:
+                            return False
+            
+            return True
+        except Exception as e:
+            print(f"Errore eliminazione giocatore: {str(e)}")
+            return False
+
+class FootballApp:
+    def __init__(self, root=None):
+        if not WEB_MODE:
+            self.root = root
+            # Only set title if root exists
+            if self.root:
+                self.root.title("CalcioDM3 - Companion")
+        
+        self.current_user = {"nome": "", "cognome": ""}
+        self.players = []
+        self.current_image_path = ""
+        self.github_manager = GitHubManager()
+        self.user_ratings_cache = {}
+        
+        if not WEB_MODE:
+            self.style = ttk.Style()
+            self.style.configure(".", background=BG_COLOR)
+            self.style.configure("TFrame", background=BG_COLOR)
+            self.style.configure("TButton", font=("Arial", 9), padding=3, background="#FFFFFF", foreground="#000000")
+            self.style.configure("Title.TLabel", font=("Arial", 14, "bold"), background=BG_COLOR, foreground="#000000")
+            self.style.configure("Header.TLabel", font=("Arial", 12, "bold"), background=BG_COLOR, foreground="#000000")
+            self.style.configure("Normal.TLabel", font=("Arial", 9), background=BG_COLOR)
+            self.style.configure("Small.TButton", font=("Arial", 8), padding=2)
+    
+    def run(self):
+        if WEB_MODE:
+            self.run_web()
+        else:
+            self.run_desktop()
+    
+    def run_desktop(self):
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        x = (screen_width - WINDOW_WIDTH) // 2
+        y = (screen_height - WINDOW_HEIGHT) // 4
+        self.root.geometry(f"+{x}+{y}")
+        
+        if not self.github_manager.test_connection():
+            messagebox.showerror("Errore", 
+                "Connessione a GitHub fallita!\\n"
+                "Possibili cause:\\n"
+                "1. Problemi di rete\\n"
+                "2. Token non valido\\n"
+                "3. Repository non trovato\\n\\n"
+                "L'applicazione verrà chiusa.")
+            sys.exit()
+        else:
+            self.load_players()
+            self.create_login_screen()
+    
+    def run_web(self):
+        self.create_login_screen_web()
+    
+    def load_players(self):
+        try:
+            self.players = self.github_manager.download_players()
+            for idx, player in enumerate(self.players):
+                player['id'] = idx + 1
+            print(f"Caricati {len(self.players)} giocatori")
+        except Exception as e:
+            print(f"Errore caricamento giocatori: {str(e)}")
+            self.players = []
+    
+    # ================================================
+    # METODI COMUNI
+    # ================================================
+    
+    def login(self, nome=None, cognome=None, pin=None):
+        if WEB_MODE:
+            if not nome or not cognome or not pin:
+                self.web_alert("Errore", "Inserisci nome, cognome e PIN")
+                return False
+        else:
+            nome = self.nome_entry.get().strip()
+            cognome = self.cognome_entry.get().strip()
+            pin = self.pin_entry.get().strip()
+            
+            if not nome or not cognome or not pin:
+                messagebox.showerror("Errore", "Inserisci nome, cognome e PIN")
+                return
+        
+        credentials = self.github_manager.download_user_credentials(nome, cognome)
+        
+        if not credentials:
+            if WEB_MODE:
+                self.web_alert("Errore", "Utente non trovato")
+                return False
+            else:
+                messagebox.showerror("Errore", "Utente non trovato")
+                return
+        
+        if credentials.get('PIN') != pin:
+            if WEB_MODE:
+                self.web_alert("Errore", "PIN errato")
+                return False
+            else:
+                messagebox.showerror("Errore", "PIN errato")
+                return
+        
+        self.current_user = {"nome": nome, "cognome": cognome}
+        self.load_user_ratings()
+        
+        if WEB_MODE:
+            self.create_main_menu_web()
+            return True
+        else:
+            self.create_main_menu()
+    
+    def load_user_ratings(self):
+        username = f"{self.current_user['nome']} {self.current_user['cognome']}"
+        ratings = self.github_manager.download_user_ratings(username)
+        self.user_ratings_cache = ratings if ratings else {}
+    
+    def refresh_data(self):
+        try:
+            self.load_players()
+            self.load_user_ratings()
+            msg = "Dati aggiornati con successo!\\n" \\
+                  f"- {len(self.players)} giocatori\\n" \\
+                  f"- {len(self.user_ratings_cache.get('valutazioni', {}))} valutazioni"
+            
+            if WEB_MODE:
+                self.web_alert("Successo", msg)
+            else:
+                messagebox.showinfo("Successo", msg)
+        except Exception as e:
+            error_msg = f"Impossibile aggiornare i dati:\\n{str(e)}"
+            if WEB_MODE:
+                self.web_alert("Errore", error_msg)
+            else:
+                messagebox.showerror("Errore", error_msg)
+    
+    # ================================================
+    # METODI DESKTOP (TKINTER)
+    # ================================================
+    
+    def create_login_screen(self):
+        # ... (codice desktop esistente) ...
+        pass
+    
+    def create_main_menu(self):
+        # ... (codice desktop esistente) ...
+        pass
+    
+    # ================================================
+    # METODI WEB (HTML/JS)
+    # ================================================
+    
+    def create_login_screen_web(self):
+        # ... (codice web esistente) ...
+        pass
+    
+    def create_main_menu_web(self):
+        # ... (codice web esistente) ...
+        pass
+    
+    def create_new_player_screen_web(self):
+        # ... (codice web esistente) ...
+        pass
+    
+    def create_delete_player_screen_web(self):
+        # ... (codice web esistente) ...
+        pass
+    
+    def create_rate_players_screen_web(self):
+        # ... (codice web esistente) ...
+        pass
+    
+    def create_rate_player_screen_web(self, player_id):
+        # ... (codice web esistente) ...
+        pass
+    
+    # ================================================
+    # GESTIONE EVENTI WEB (chiamati da JavaScript)
+    # ================================================
+    
+    def handle_web_event(self, event, data=None):
+        # ... (codice esistente) ...
+        pass
+    
+    def save_player_web(self, data):
+        # ... (codice esistente) ...
+        pass
+    
+    def confirm_delete_player_web(self, player_id):
+        # ... (codice esistente) ...
+        pass
+    
+    def rate_player_web(self, player_id):
+        # ... (codice esistente) ...
+        pass
+    
+    def save_rating_web(self, data):
+        # ... (codice esistente) ...
+        pass
+    
+    def display_html(self, html):
+        # ... (codice esistente) ...
+        pass
+    
+    def web_alert(self, title, message):
+        # ... (codice esistente) ...
+        pass
+`);
+        
+        // Patch HTTP requests and start app
+        await pyodide.runPythonAsync(`
+            import pyodide_http
+            pyodide_http.patch_all()
+            
             app = FootballApp()
             app.run_web()
             from js import globalThis
