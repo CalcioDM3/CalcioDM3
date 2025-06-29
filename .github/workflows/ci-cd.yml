@@ -26,9 +26,9 @@ jobs:
         
     - name: Run tests
       run: |
-        export PYTHONPATH=$PYTHONPATH:$GITHUB_WORKSPACE
+        python -c "import sys, os; sys.path.insert(0, os.getcwd())"
         pytest tests/
-
+        
   build-desktop:
     runs-on: windows-latest
     needs: test
