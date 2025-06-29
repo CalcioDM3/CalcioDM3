@@ -17,10 +17,15 @@ jobs:
       
     - name: Prepare docs directory
       run: |
+        # Create docs directory if it doesn't exist
         mkdir -p docs
+        
+        # Copy only necessary files to docs directory
         cp main.py docs/
-        cp styles.css docs/
-        cp -r docs/assets docs/  # Copy from existing docs/assets
+        cp styles.css docs/ || echo "styles.css not found, continuing"
+        cp -r assets/ docs/assets/ || echo "assets not found, continuing"
+        
+        # Create .nojekyll file
         touch docs/.nojekyll
         
         # Create Pyodide entry point
