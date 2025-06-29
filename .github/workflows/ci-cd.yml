@@ -28,6 +28,9 @@ jobs:
         
     - name: Run tests
       run: |
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1024x768x16 &
+        python -c "import sys, os; sys.path.insert(0, os.getcwd())"
         xvfb-run --auto-servernum pytest tests/
         
   build-desktop:
@@ -74,20 +77,22 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        persist-credentials: true  # Crucial for authentication
+        persist-credentials: true
       
     - name: Prepare for Pages
       run: |
-        cp main.py docs/
-        cp requirements.txt docs/
-         # Add .nojekyll to prevent processing
-         touch docs/.nojekyll
-         # Rename main.py to main.txt to prevent processing
-         mv docs/main.py docs/main.txt
+        # Add .nojekyll to prevent processing
+        touch docs/.nojekyll
+        # Copy only necessary files
+        cp -r docs/assets .
+        cp docs/index.html .
+        cp docs/styles.css .
+        cp docs/app.js .
+        cp docs/pyodide-loader.js .
       
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}  # Use built-in token
-        publish_dir: ./docs
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
         keep_files: true
