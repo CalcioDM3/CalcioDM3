@@ -108,40 +108,13 @@ window.updateUI = function(htmlContent) {
     appContainer.innerHTML = htmlContent;
 };
 
-// Gestisce il caricamento efficiente di Pyodide
-window.loadPyodide = async function(config) {
-    if (!window.pyodide) {
-        // Carica lo script Pyodide se non è già presente
-        if (!window._pyodideLoading) {
-            window._pyodideLoading = true;
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = config.indexURL || 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js';
-                script.onload = () => resolve(window.loadPyodide(config));
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
-        }
-        return new Promise(resolve => {
-            const check = () => {
-                if (window.pyodide) resolve(window.pyodide);
-                else setTimeout(check, 100);
-            };
-            check();
-        });
-    }
-    
-    // Inizializza Pyodide
-    return window.pyodide;
-};
-
 // Inizializzazione Pyodide
 async function initPyodide() {
     const loadingScreen = document.getElementById('loading-screen');
     
     try {
         // Carica Pyodide
-        const pyodide = await window.loadPyodide({
+        const pyodide = await loadPyodide({
             indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
         });
         window.pyodide = pyodide;
@@ -156,12 +129,17 @@ async function initPyodide() {
         // Imposta il flag per indicare che siamo in web mode
         pyodide.runPython(`import sys; sys.running_in_web = True`);
         
-        // Carica il codice Python dalla repository (usando raw URL)
-        const response = await fetch('https://raw.githubusercontent.com/CalcioDM3/CalcioDM3/main/main.py');
+        // Carica il codice Python dalla repository
+        const response = await fetch('https://raw.githubusercontent.com/CalcioDM3/CalcioDM3/main/main.py?cache=' + Date.now());
         if (!response.ok) {
             throw new Error(`Failed to fetch main.py: ${response.status}`);
         }
-        const pythonCode = await response.text();
+        let pythonCode = await response.text();
+        
+        // Rimuovi eventuali tag HTML che potrebbero essersi inseriti
+        pythonCode = pythonCode.replace(/<style[\s\S]*?<\/style>/g, '');
+        pythonCode = pythonCode.replace(/<script[\s\S]*?<\/script>/g, '');
+        pythonCode = pythonCode.replace(/<[^>]+>/g, '');
         
         // Esegui il codice Python
         await pyodide.runPythonAsync(pythonCode);
@@ -190,5 +168,31 @@ async function initPyodide() {
     }
 }
 
+// Gestisce il caricamento efficiente di Pyodide
+window.loadPyodide = async function(config) {
+    if (window.pyodide) {
+        return window.pyodide;
+    }
+    
+    // Carica lo script Pyodide
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = config.indexURL || 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js';
+        script.onload = async () => {
+            try {
+                const pyodide = await loadPyodide(config);
+                window.pyodide = pyodide;
+                resolve(pyodide);
+            } catch (err) {
+                reject(err);
+            }
+        };
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+};
+
 // Avvia Pyodide
-window.addEventListener('DOMContentLoaded', initPyodide);
+window.addEventListener('DOMContentLoaded', () => {
+    initPyodide();
+});
