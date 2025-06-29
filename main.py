@@ -206,8 +206,8 @@ class GitHubManager:
             print(f"Errore upload file: {str(e)}")
             return False
     
-    def upload_player(self, player_data, image_path):
-        """Carica un nuovo giocatore su GitHub"""
+    async def upload_player(self, player_data, image_path):
+        """Carica un nuovo giocatore su GitHub (async per web)"""
         try:
             # Salva dati giocatore
             json_content = json.dumps(player_data, indent=4).encode('utf-8')
@@ -221,7 +221,7 @@ class GitHubManager:
                 if WEB_MODE:
                     # In web mode, image_path è un blob URL
                     from js import fetch
-                    response = fetch(image_path)
+                    response = await fetch(image_path)
                     if response.status != 200:
                         return False
                     array_buffer = await response.arrayBuffer()
