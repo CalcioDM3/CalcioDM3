@@ -1,47 +1,41 @@
-import sys
-import os
-# Add parent directory to Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+// tests/test_github_manager.js
+import { GitHubManager } from '../docs/app.js';
 
-import unittest
-from unittest.mock import patch, MagicMock
-from main import GitHubManager
+describe('GitHubManager', () => {
+    // Mock fetch
+    beforeAll(() => {
+        global.fetch = jest.fn();
+    });
 
-class TestGitHubManager(unittest.TestCase):
-    @patch('main.requests')
-    def test_test_connection_success(self, mock_requests):
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_requests.get.return_value = mock_response
-        
-        manager = GitHubManager()
-        self.assertTrue(manager.test_connection())
-    
-    @patch('main.requests')
-    def test_test_connection_failure(self, mock_requests):
-        mock_requests.get.side_effect = Exception("Connection error")
-        
-        manager = GitHubManager()
-        self.assertFalse(manager.test_connection())
+    beforeEach(() => {
+        fetch.mockClear();
+    });
 
-    @patch('main.requests')
-    def test_download_players(self, mock_requests):
-        mock_response = MagicMock()
-        mock_response.json.return_value = [
-            {'name': 'player1.json', 'download_url': 'https://example.com/player1.json'},
-            {'name': 'player1.jpg', 'download_url': 'https://example.com/player1.jpg'}
-        ]
-        mock_requests.get.return_value = mock_response
-        
-        content_response = MagicMock()
-        content_response.text = '{"nome": "Mario", "cognome": "Rossi"}'
-        mock_requests.get.side_effect = [mock_response, content_response]
-        
-        manager = GitHubManager()
-        players = manager.download_players()
-        self.assertEqual(len(players), 1)
-        self.assertEqual(players[0]['nome'], "Mario")
-        self.assertEqual(players[0]['cognome'], "Rossi")
+    test('testConnection success', async () => {
+        fetch.mockResolvedValueOnce({ ok: true });
+        const result = await GitHubManager.testConnection();
+        expect(result).toBe(true);
+    });
 
-if __name__ == '__main__':
-    unittest.main()
+    test('downloadPlayers success', async () => {
+        const mockFiles = [
+            { name: 'player1.json', download_url: 'https://example.com/player1.json' },
+            { name: 'player1.jpg', download_url: 'https://example.com/player1.jpg' }
+        ];
+        
+        fetch.mockResolvedValueOnce({ 
+            ok: true, 
+            json: () => Promise.resolve(mockFiles) 
+        });
+        
+        fetch.mockResolvedValueOnce({ 
+            ok: true, 
+            json: () => Promise.resolve({ nome: "Mario", cognome: "Rossi" }) 
+        });
+        
+        const players = await GitHubManager.downloadPlayers();
+        expect(players.length).toBe(1);
+        expect(players[0].nome).toBe("Mario");
+        expect(players[0].image_url).toBe("https://example.com/player1.jpg");
+    });
+});
