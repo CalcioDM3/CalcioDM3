@@ -1,21 +1,26 @@
 // Gestisce il caricamento efficiente di Pyodide
-async function loadPyodide(config) {
+window.loadPyodide = async function(config) {
     if (!window.pyodide) {
-        // Carica lo script Pyodide
-        const script = document.createElement('script');
-        script.src = `${config.indexURL || 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/'}pyodide.js`;
-        document.head.appendChild(script);
-        
-        // Attendi il caricamento
-        await new Promise((resolve) => {
-            script.onload = resolve;
+        // Carica lo script Pyodide se non è già presente
+        if (!window._pyodideLoading) {
+            window._pyodideLoading = true;
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = config.indexURL || 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js';
+                script.onload = () => resolve(window.loadPyodide(config));
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        return new Promise(resolve => {
+            const check = () => {
+                if (window.pyodide) resolve(window.pyodide);
+                else setTimeout(check, 100);
+            };
+            check();
         });
     }
     
     // Inizializza Pyodide
-    return await loadPyodide({
-        indexURL: config.indexURL,
-        stdout: (text) => console.log(text),
-        stderr: (text) => console.error(text)
-    });
-}
+    return window.pyodide;
+};
