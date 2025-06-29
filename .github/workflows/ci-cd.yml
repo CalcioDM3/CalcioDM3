@@ -23,12 +23,14 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        sudo apt-get update
+        sudo apt-get install xvfb  # Install virtual display
         
     - name: Run tests
       run: |
-        python -c "import sys, os; sys.path.insert(0, os.getcwd())"
-        pytest tests/
-        
+        # Set up virtual display and run tests
+        xvfb-run --auto-servernum pytest tests/
+            
   build-desktop:
     runs-on: windows-latest
     needs: test
