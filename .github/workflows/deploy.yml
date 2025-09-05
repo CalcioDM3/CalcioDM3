@@ -28,15 +28,17 @@ jobs:
           echo "const USERS_FOLDER = 'UTENTI';" >> js/config.js
           echo "const ADMIN_USERS = ['Gianmarco Saponaro', 'Marco D\\'Amato'];" >> js/config.js
           echo "const GITHUB_API_BASE = 'https://api.github.com/repos/' + GITHUB_USER + '/' + GITHUB_REPO + '/contents';" >> js/config.js
-          
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v4
-        
-      - name: Upload to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "."
-          
+
+  deploy:
+    environment: 
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    steps:
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
         id: deployment
+        uses: actions/deploy-pages@v4
