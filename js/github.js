@@ -1,64 +1,42 @@
-// js/github.js (versione aggiornata)
+// Gestione delle interazioni con GitHub API
 
 class GitHubManager {
     constructor() {
-        this.token = null; // Non hardcodiamo più il token
-        this.baseUrl = 'https://api.github.com/repos/CalcioDM3/CalcioDM3/contents';
+        this.token = GITHUB_TOKEN;
+        this.baseUrl = GITHUB_API_BASE;
         this.players = [];
-    }
-
-    async init() {
-        // Prova a ottenere il token da un endpoint sicuro
-        this.token = await this.getTokenSecurely();
-    }
-
-    async getTokenSecurely() {
-        // In sviluppo, possiamo usare un token locale da un file non versionato
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            try {
-                const response = await fetch('/token.json');
-                const data = await response.json();
-                return data.token;
-            } catch (e) {
-                console.warn('Token non disponibile in locale. Assicurati di avere un file token.json con il tuo token.');
-                return null;
-            }
-        }
-        
-        // In produzione, usa un serverless function o proxy
-        try {
-            const response = await fetch('/.netlify/functions/get-token');
-            const data = await response.json();
-            return data.token;
-        } catch (e) {
-            console.error('Impossibile ottenere il token:', e);
-            return null;
-        }
+        this.ratings = {};
+        this.imageCache = {};
     }
 
     async getHeaders() {
-        return {
-            "Authorization": `token ${this.token}`,
+        const headers = {
             "Accept": "application/vnd.github.v3+json",
             "Content-Type": "application/json"
         };
+        
+        if (this.token) {
+            headers["Authorization"] = `token ${this.token}`;
+        }
+        
+        return headers;
     }
 
     async testConnection() {
         try {
-            const response = await fetch(`${this.baseUrl}/GIOCATORI`, {
+            const response = await fetch(`${this.baseUrl}/${PLAYERS_FOLDER}`, {
                 headers: await this.getHeaders()
             });
             return response.status === 200;
         } catch (error) {
-            console.error("Errore di connessione:", error);
+            console.error("Errore di connessione a GitHub:", error);
             return false;
         }
     }
 
     async loadPlayers() {
         try {
-            const response = await fetch(`${this.baseUrl}/GIOCATORI`, {
+            const response = await fetch(`${this.baseUrl}/${PLAYERS_FOLDER}`, {
                 headers: await this.getHeaders()
             });
             
@@ -71,60 +49,109 @@ class GitHubManager {
             
             for (const file of files) {
                 if (file.name.endsWith('.json')) {
-                    const contentResponse = await fetch(file.download_url);
-                    if (contentResponse.ok) {
-                        const playerData = await contentResponse.json();
-                        
-                        // Cerca l'immagine associata
-                        const baseName = file.name.replace('.json', '');
-                        const imgFile = files.find(f => 
-                            f.name.startsWith(baseName) && 
-                            /\.(png|jpg|jpeg)$/i.test(f.name)
-                        );
-                        
-                        if (imgFile) {
-                            playerData.image_url = imgFile.download_url;
+                    try {
+                        const contentResponse = await fetch(file.download_url);
+                        if (contentResponse.ok) {
+                            const playerData = await contentResponse.json();
+                            
+                            // Cerca l'immagine associata
+                            const baseName = file.name.replace('.json', '');
+                            const imgFile = files.find(f => 
+                                f.name.startsWith(baseName) && 
+                                /\.(png|jpg|jpeg)$/i.test(f.name)
+                            );
+                            
+                            if (imgFile) {
+                                playerData.image_url = imgFile.download_url;
+                            }
+                            
+                            playerData.id = this.players.length + 1;
+                            this.players.push(playerData);
                         }
-                        
-                        this.players.push(playerData);
+                    } catch (e) {
+                        console.error(`Errore nel caricamento del giocatore ${file.name}:`, e);
                     }
                 }
             }
             
+            console.log(`Caricati ${this.players.length} giocatori`);
             return this.players;
         } catch (error) {
             console.error("Errore nel caricamento giocatori:", error);
+            
+            // Fallback a dati mock per sviluppo
+            if (!this.token) {
+                console.warn("Token non disponibile, uso dati mock");
+                this.players = [
+                    { id: 1, nome: "Mario", cognome: "Rossi", image_url: "https://via.placeholder.com/150" },
+                    { id: 2, nome: "Luigi", cognome: "Bianchi", image_url: "https://via.placeholder.com/150" },
+                    { id: 3, nome: "Giuseppe", cognome: "Verdi", image_url: "https://via.placeholder.com/150" }
+                ];
+                return this.players;
+            }
+            
             return [];
         }
     }
 
+    async getPlayerImage(player, size = [80, 80]) {
+        if (!player.image_url) {
+            return null;
+        }
+        
+        const cacheKey = `${player.image_url}_${size[0]}_${size[1]}`;
+        
+        if (this.imageCache[cacheKey]) {
+            return this.imageCache[cacheKey];
+        }
+        
+        try {
+            const response = await fetch(player.image_url);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                this.imageCache[cacheKey] = url;
+                return url;
+            }
+        } catch (error) {
+            console.error("Errore nel caricamento immagine:", error);
+        }
+        
+        return null;
+    }
+
     async uploadRatings(ratingsData) {
         try {
-            const username = ratingsData.valutatore;
-            const safeName = username.replace(/[^a-zA-Z0-9]/g, '_');
+            if (!this.token) {
+                console.warn("Token non disponibile, simulazione upload valutazioni");
+                return true; // Simula successo in sviluppo
+            }
+            
+            const safeName = ratingsData.valutatore.replace(/[^a-zA-Z0-9]/g, '_');
             const filename = `Valutazioni_${safeName}.json`;
-            const path = `VALUTAZIONI/${filename}`;
+            const path = `${RATINGS_FOLDER}/${filename}`;
             
-            const content = JSON.stringify(ratingsData, null, 2);
-            const contentBase64 = btoa(unescape(encodeURIComponent(content)));
-            
-            // Controlla se il file esiste già per ottenere lo SHA
+            // Controlla se il file esiste già
             let sha = null;
             try {
-                const existingFileResponse = await fetch(`${this.baseUrl}/${path}`, {
+                const existingResponse = await fetch(`${this.baseUrl}/${path}`, {
                     headers: await this.getHeaders()
                 });
                 
-                if (existingFileResponse.ok) {
-                    const existingFile = await existingFileResponse.json();
-                    sha = existingFile.sha;
+                if (existingResponse.ok) {
+                    const existingData = await existingResponse.json();
+                    sha = existingData.sha;
                 }
             } catch (e) {
                 // Il file non esiste, procediamo senza SHA
             }
             
+            // Prepara i dati per l'upload
+            const content = JSON.stringify(ratingsData, null, 2);
+            const contentBase64 = btoa(unescape(encodeURIComponent(content)));
+            
             const payload = {
-                message: `Aggiornamento valutazioni di ${username}`,
+                message: `Aggiornamento valutazioni di ${ratingsData.valutatore}`,
                 content: contentBase64,
                 branch: "main"
             };
@@ -139,11 +166,100 @@ class GitHubManager {
                 body: JSON.stringify(payload)
             });
             
-            return response.ok;
+            if (response.ok) {
+                console.log("Valutazioni caricate con successo");
+                return true;
+            } else {
+                console.error("Errore nel caricamento valutazioni:", await response.text());
+                return false;
+            }
         } catch (error) {
-            console.error("Errore nel caricamento valutazioni:", error);
+            console.error("Errore nell'upload delle valutazioni:", error);
             return false;
         }
+    }
+
+    async downloadUserRatings(username) {
+        try {
+            if (!this.token) {
+                console.warn("Token non disponibile, uso valutazioni mock");
+                return this.getMockRatings();
+            }
+            
+            const safeName = username.replace(/[^a-zA-Z0-9]/g, '_');
+            const filename = `Valutazioni_${safeName}.json`;
+            const path = `${RATINGS_FOLDER}/${filename}`;
+            
+            const response = await fetch(`${this.baseUrl}/${path}`, {
+                headers: await this.getHeaders()
+            });
+            
+            if (response.ok) {
+                const fileData = await response.json();
+                const content = JSON.parse(atob(fileData.content));
+                return content;
+            } else if (response.status === 404) {
+                // Il file non esiste, restituisci oggetto vuoto
+                return { valutatore: username, valutazioni: {}, timestamp: new Date().toISOString() };
+            } else {
+                throw new Error(`Errore HTTP: ${response.status}`);
+            }
+        } catch (error) {
+            console.error("Errore nel download delle valutazioni:", error);
+            return { valutatore: username, valutazioni: {}, timestamp: new Date().toISOString() };
+        }
+    }
+
+    async downloadUserCredentials(nome, cognome) {
+        try {
+            if (!this.token) {
+                console.warn("Token non disponibile, uso credenziali mock");
+                return this.getMockUser(nome, cognome);
+            }
+            
+            const filename = `${nome}_${cognome}.json`;
+            const path = `${USERS_FOLDER}/${filename}`;
+            
+            const response = await fetch(`${this.baseUrl}/${path}`, {
+                headers: await this.getHeaders()
+            });
+            
+            if (response.ok) {
+                const fileData = await response.json();
+                const content = JSON.parse(atob(fileData.content));
+                return content;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Errore nel download delle credenziali:", error);
+            return null;
+        }
+    }
+
+    getMockUser(nome, cognome) {
+        // Dati mock per sviluppo senza token
+        const mockUsers = {
+            "Gianmarco_Saponaro": { nome: "Gianmarco", cognome: "Saponaro", PIN: "1234" },
+            "Marco_DAmato": { nome: "Marco", cognome: "D'Amato", PIN: "5678" },
+            "Test_User": { nome: "Test", cognome: "User", PIN: "0000" }
+        };
+        
+        const key = `${nome}_${cognome}`;
+        return mockUsers[key] || null;
+    }
+
+    getMockRatings() {
+        // Valutazioni mock per sviluppo
+        return {
+            valutatore: "Mock User",
+            timestamp: new Date().toISOString(),
+            valutazioni: {}
+        };
+    }
+
+    isAuthenticated() {
+        return this.token !== '';
     }
 }
 
