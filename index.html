@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalcioDM3 - Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="loginPage" class="login-container">
+        <div class="card w-full max-w-md mx-4">
+            <div class="logo-container p-6 text-center">
+                <h1 class="text-2xl font-bold text-white">CalcioDM3 Companion</h1>
+            </div>
+            
+            <div class="px-8 pt-8 pb-2">
+                <div class="text-center mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800">Accesso</h2>
+                    <p class="text-gray-600 mt-1">Inserisci le tue credenziali</p>
+                </div>
+                
+                <form id="loginForm">
+                    <div class="mb-4">
+                        <label for="nome" class="block text-gray-700 text-sm font-medium mb-2">Nome</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-user text-gray-400"></i>
+                            </div>
+                            <input type="text" id="nome" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-green-500 focus:border-green-500 block w-full pl-10 p-2.5" placeholder="Il tuo nome" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="cognome" class="block text-gray-700 text-sm font-medium mb-2">Cognome</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-user-tag text-gray-400"></i>
+                            </div>
+                            <input type="text" id="cognome" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-green-500 focus:border-green-500 block w-full pl-10 p-2.5" placeholder="Il tuo cognome" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="pin" class="block text-gray-700 text-sm font-medium mb-2">PIN</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-lock text-gray-400"></i>
+                            </div>
+                            <input type="password" id="pin" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-green-500 focus:border-green-500 block w-full pl-10 p-2.5" placeholder="Il tuo PIN" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary text-white font-medium rounded-lg text-sm px-5 py-2.5 w-full mb-6">
+                        Accedi
+                    </button>
+                </form>
+            </div>
+            
+            <div class="px-8 py-4 bg-gray-50 text-center">
+                <p class="text-xs text-gray-600">© 2023 CalcioDM3 Team. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="appContainer" class="hidden">
+        <!-- L'app verrà caricata qui dinamicamente -->
+    </div>
+
+    <!-- Carica i file JavaScript -->
+    <script src="js/config.js"></script>
+    <script src="js/github.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/players.js"></script>
+    <script src="js/ratings.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
