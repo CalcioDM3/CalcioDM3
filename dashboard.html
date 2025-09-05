@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CalcioDM3 Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #A5E090;
+            --secondary-color: #4CAF50;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f9f0;
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+            color: white;
+            width: 250px;
+            min-height: 100vh;
+        }
+        .menu-item {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .menu-item:hover, .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-left: 4px solid white;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .player-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid var(--primary-color);
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="flex">
+    <!-- Sidebar -->
+    <div class="sidebar fixed hidden md:block">
+        <div class="p-6 text-center">
+            <img src="assets/logo.png" alt="Logo CalcioDM3" class="w-24 h-24 mx-auto rounded-full bg-white p-2">
+            <h1 class="text-xl font-bold mt-4">CalcioDM3 Companion</h1>
+            <p class="text-sm mt-2">Benvenuto, <span id="userName">Utente</span></p>
+        </div>
+        
+        <nav class="mt-8">
+            <a href="#" class="menu-item block py-3 px-6 active">
+                <i class="fa-solid fa-gauge-high mr-3"></i> Dashboard
+            </a>
+            <a href="#" class="menu-item block py-3 px-6" onclick="showSection('players')">
+                <i class="fa-solid fa-people-group mr-3"></i> Giocatori
+            </a>
+            <a href="#" class="menu-item block py-3 px-6" onclick="showSection('ratings')">
+                <i class="fa-solid fa-star mr-3"></i> Valutazioni
+            </a>
+            <a href="#" class="menu-item block py-3 px-6" onclick="showSection('admin')" id="adminSection" style="display: none;">
+                <i class="fa-solid fa-gear mr-3"></i> Amministrazione
+            </a>
+            <a href="#" class="menu-item block py-3 px-6" onclick="logout()">
+                <i class="fa-solid fa-right-from-bracket mr-3"></i> Esci
+            </a>
+        </nav>
+        
+        <div class="absolute bottom-0 w-full p-4 text-center text-xs">
+            <p>© 2023 CalcioDM3 Team</p>
+        </div>
+    </div>
+    
+    <!-- Mobile header -->
+    <div class="bg-green-600 text-white p-4 fixed w-full md:hidden flex justify-between items-center">
+        <div class="flex items-center">
+            <button id="mobileMenuBtn" class="mr-4">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            <h1 class="text-xl font-bold">CalcioDM3</h1>
+        </div>
+        <div>
+            <span id="mobileUserName">Utente</span>
+        </div>
+    </div>
+    
+    <!-- Main content -->
+    <div class="main-content md:ml-64 pt-16 md:pt-0 w-full min-h-screen">
+        <div class="p-6">
+            <!-- Dashboard Section -->
+            <div id="dashboardSection">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="card p-6">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fa-solid fa-people-group text-green-600 text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold">Giocatori</h3>
+                                <p class="text-3xl font-bold" id="playersCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fa-solid fa-star text-blue-600 text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold">Valutazioni</h3>
+                                <p class="text-3xl font-bold" id="ratingsCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 p-3 rounded-full">
+                                <i class="fa-solid fa-share-nodes text-purple-600 text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold">Condivise</h3>
+                                <p class="text-3xl font-bold" id="sharedCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Giocatori Recenti</h3>
+                        <div id="recentPlayers" class="space-y-4">
+                            <!-- Giocatori verranno caricati qui -->
+                            <div class="text-center py-4 text-gray-500">
+                                <i class="fa-solid fa-spinner animate-spin"></i> Caricamento...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Azioni Rapide</h3>
+                        <div class="space-y-3">
+                            <button class="btn-primary text-white font-medium rounded-lg text-sm px-4 py-2.5 w-full text-left flex items-center">
+                                <i class="fa-solid fa-star mr-2"></i> Valuta Giocatori
+                            </button>
+                            <button class="btn-primary text-white font-medium rounded-lg text-sm px-4 py-2.5 w-full text-left flex items-center">
+                                <i class="fa-solid fa-share-nodes mr-2"></i> Condividi Valutazioni
+                            </button>
+                            <button class="btn-primary text-white font-medium rounded-lg text-sm px-4 py-2.5 w-full text-left flex items-center" id="adminButton" style="display: none;">
+                                <i class="fa-solid fa-user-plus mr-2"></i> Aggiungi Giocatore
+                            </button>
+                            <button class="bg-gray-100 text-gray-800 font-medium rounded-lg text-sm px-4 py-2.5 w-full text-left flex items-center">
+                                <i class="fa-solid fa-rotate mr-2"></i> Aggiorna Dati
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Altre sezioni (giocatori, valutazioni, admin) saranno nascoste inizialmente -->
+            <div id="playersSection" style="display: none;">
+                <!-- Contenuto per la sezione giocatori -->
+            </div>
+            
+            <div id="ratingsSection" style="display: none;">
+                <!-- Contenuto per la sezione valutazioni -->
+            </div>
+            
+            <div id="adminSection" style="display: none;">
+                <!-- Contenuto per la sezione admin -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile menu (hidden by default) -->
+    <div id="mobileMenu" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden md:hidden">
+        <div class="bg-white w-3/4 h-full p-6">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold">Menu</h2>
+                <button id="closeMobileMenu">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="text-center mb-6">
+                <img src="assets/logo.png" alt="Logo CalcioDM3" class="w-16 h-16 mx-auto rounded-full bg-gray-100 p-2">
+                <p class="mt-2 font-semibold" id="mobileMenuUserName">Utente</p>
+            </div>
+            
+            <nav class="space-y-4">
+                <a href="#" class="block py-3 px-4 bg-green-100 text-green-800 rounded-lg">
+                    <i class="fa-solid fa-gauge-high mr-3"></i> Dashboard
+                </a>
+                <a href="#" class="block py-3 px-4 text-gray-700 rounded-lg" onclick="showSection('players')">
+                    <i class="fa-solid fa-people-group mr-3"></i> Giocatori
+                </a>
+                <a href="#" class="block py-3 px-4 text-gray-700 rounded-lg" onclick="showSection('ratings')">
+                    <i class="fa-solid fa-star mr-3"></i> Valutazioni
+                </a>
+                <a href="#" class="block py-3 px-4 text-gray-700 rounded-lg" onclick="showSection('admin')" id="mobileAdminSection" style="display: none;">
+                    <i class="fa-solid fa-gear mr-3"></i> Amministrazione
+                </a>
+                <a href="#" class="block py-3 px-4 text-gray-700 rounded-lg" onclick="logout()">
+                    <i class="fa-solid fa-right-from-bracket mr-3"></i> Esci
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <script>
+        // Funzioni per la gestione della UI
+        function showSection(sectionName) {
+            // Nascondi tutte le sezioni
+            document.querySelectorAll('[id$="Section"]').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Mostra la sezione richiesta
+            document.getElementById(sectionName + 'Section').style.display = 'block';
+            
+            // Chiudi il menu mobile se aperto
+            document.getElementById('mobileMenu').classList.add('hidden');
+        }
+        
+        function logout() {
+            localStorage.removeItem('userData');
+            window.location.href = 'login.html';
+        }
+        
+        // Controlla se l'utente è autenticato
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            
+            if (!userData) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Aggiorna l'interfaccia con i dati utente
+            document.getElementById('userName').textContent = userData.nome;
+            document.getElementById('mobileUserName').textContent = userData.nome;
+            document.getElementById('mobileMenuUserName').textContent = userData.nome;
+            
+            // Controlla se l'utente è admin
+            const adminUsers = ["Gianmarco Saponaro", "Marco D'Amato"];
+            const fullName = `${userData.nome} ${userData.cognome}`;
+            
+            if (adminUsers.includes(fullName)) {
+                document.getElementById('adminSection').style.display = 'block';
+                document.getElementById('adminButton').style.display = 'block';
+                document.getElementById('mobileAdminSection').style.display = 'block';
+            }
+            
+            // Carica i dati iniziali
+            loadDashboardData();
+            
+            // Gestione menu mobile
+            document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+                document.getElementById('mobileMenu').classList.remove('hidden');
+            });
+            
+            document.getElementById('closeMobileMenu').addEventListener('click', function() {
+                document.getElementById('mobileMenu').classList.add('hidden');
+            });
+        });
+        
+        // Funzione per caricare i dati della dashboard
+        async function loadDashboardData() {
+            try {
+                // Simula il caricamento dei dati (sostituire con chiamate API reali)
+                setTimeout(() => {
+                    document.getElementById('playersCount').textContent = '24';
+                    document.getElementById('ratingsCount').textContent = '8';
+                    document.getElementById('sharedCount').textContent = '3';
+                    
+                    // Simula giocatori recenti
+                    const recentPlayers = [
+                        { name: 'Mario Rossi', image: 'https://via.placeholder.com/80', position: 'Attaccante' },
+                        { name: 'Luca Bianchi', image: 'https://via.placeholder.com/80', position: 'Centrocampista' },
+                        { name: 'Giuseppe Verdi', image: 'https://via.placeholder.com/80', position: 'Difensore' }
+                    ];
+                    
+                    const recentPlayersContainer = document.getElementById('recentPlayers');
+                    recentPlayersContainer.innerHTML = '';
+                    
+                    recentPlayers.forEach(player => {
+                        recentPlayersContainer.innerHTML += `
+                            <div class="flex items-center">
+                                <img src="${player.image}" alt="${player.name}" class="player-image">
+                                <div class="ml-4">
+                                    <h4 class="font-semibold">${player.name}</h4>
+                                    <p class="text-sm text-gray-600">${player.position}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }, 1500);
+            } catch (error) {
+                console.error('Errore nel caricamento dati:', error);
+            }
+        }
+    </script>
+</body>
+</html>
