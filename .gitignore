@@ -1,0 +1,25 @@
+# File di configurazione
+js/config.js
+js/config.local.js
+
+# File di ambiente
+.env
+.env.local
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# File di log
+*.log
+
+# File temporanei
+*.tmp
+*.temp
+
+# File di IDE
+.vscode/
+.idea/
+
+# File di OS
+node_modules/
