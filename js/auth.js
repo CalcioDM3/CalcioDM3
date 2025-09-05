@@ -1,47 +1,38 @@
-// js/auth.js
+// Gestione dell'autenticazione
 
 class AuthManager {
     constructor() {
-        this.adminUsers = ["Gianmarco Saponaro", "Marco D'Amato"];
-        this.users = [];
+        this.adminUsers = ADMIN_USERS;
+        this.currentUser = null;
     }
 
-    async init() {
-        await this.loadUsers();
-    }
-
-    async loadUsers() {
+    async login(nome, cognome, pin) {
         try {
-            // Qui implementeremo il caricamento degli utenti da GitHub
-            // Per ora usiamo dati mock
-            this.users = [
-                { nome: "Gianmarco", cognome: "Saponaro", PIN: "1234" },
-                { nome: "Marco", cognome: "D'Amato", PIN: "5678" },
-                { nome: "Test", cognome: "User", PIN: "0000" }
-            ];
-        } catch (error) {
-            console.error("Errore nel caricamento utenti:", error);
-        }
-    }
-
-    login(nome, cognome, pin) {
-        const user = this.users.find(u => 
-            u.nome.toLowerCase() === nome.toLowerCase() && 
-            u.cognome.toLowerCase() === cognome.toLowerCase() &&
-            u.PIN === pin
-        );
-
-        if (user) {
-            const userData = {
-                nome: user.nome,
-                cognome: user.cognome,
-                isAdmin: this.isAdmin(user.nome, user.cognome)
+            // Verifica le credenziali
+            const credentials = await githubManager.downloadUserCredentials(nome, cognome);
+            
+            if (!credentials) {
+                return { success: false, error: "Utente non trovato" };
+            }
+            
+            if (credentials.PIN !== pin) {
+                return { success: false, error: "PIN errato" };
+            }
+            
+            // Crea l'oggetto utente
+            this.currentUser = {
+                nome: nome,
+                cognome: cognome,
+                isAdmin: this.isAdmin(nome, cognome)
             };
             
-            localStorage.setItem('userData', JSON.stringify(userData));
-            return { success: true, data: userData };
-        } else {
-            return { success: false, error: "Credenziali non valide" };
+            // Salva nel localStorage
+            localStorage.setItem('userData', JSON.stringify(this.currentUser));
+            
+            return { success: true, data: this.currentUser };
+        } catch (error) {
+            console.error("Errore durante il login:", error);
+            return { success: false, error: "Errore di connessione" };
         }
     }
 
@@ -51,15 +42,23 @@ class AuthManager {
     }
 
     logout() {
+        this.currentUser = null;
         localStorage.removeItem('userData');
+        localStorage.removeItem('userRatings');
     }
 
     getCurrentUser() {
-        return JSON.parse(localStorage.getItem('userData'));
+        if (!this.currentUser) {
+            const savedData = localStorage.getItem('userData');
+            if (savedData) {
+                this.currentUser = JSON.parse(savedData);
+            }
+        }
+        return this.currentUser;
     }
 
     isAuthenticated() {
-        return localStorage.getItem('userData') !== null;
+        return this.getCurrentUser() !== null;
     }
 }
 
