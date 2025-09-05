@@ -1,10 +1,39 @@
-// js/github.js
+// js/github.js (versione aggiornata)
 
 class GitHubManager {
     constructor() {
-        this.token = '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'; // Token di esempio - DA SOSTITUIRE
+        this.token = null; // Non hardcodiamo più il token
         this.baseUrl = 'https://api.github.com/repos/CalcioDM3/CalcioDM3/contents';
         this.players = [];
+    }
+
+    async init() {
+        // Prova a ottenere il token da un endpoint sicuro
+        this.token = await this.getTokenSecurely();
+    }
+
+    async getTokenSecurely() {
+        // In sviluppo, possiamo usare un token locale da un file non versionato
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            try {
+                const response = await fetch('/token.json');
+                const data = await response.json();
+                return data.token;
+            } catch (e) {
+                console.warn('Token non disponibile in locale. Assicurati di avere un file token.json con il tuo token.');
+                return null;
+            }
+        }
+        
+        // In produzione, usa un serverless function o proxy
+        try {
+            const response = await fetch('/.netlify/functions/get-token');
+            const data = await response.json();
+            return data.token;
+        } catch (e) {
+            console.error('Impossibile ottenere il token:', e);
+            return null;
+        }
     }
 
     async getHeaders() {
