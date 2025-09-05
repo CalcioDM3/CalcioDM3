@@ -5,29 +5,50 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
       
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
           
-      - name: Build with environment variables
+      - name: Generate configuration
         run: |
-          # Crea un file di configurazione con il token
-          echo "const GITHUB_TOKEN = '${{ secrets.ACCESS_TOKEN }}';" > js/config.js
+          echo "// Configurazione generata automaticamente" > js/config.js
+          echo "const GITHUB_TOKEN = '${{ secrets.ACCESS_TOKEN }}';" >> js/config.js
           echo "const GITHUB_USER = 'CalcioDM3';" >> js/config.js
           echo "const GITHUB_REPO = 'CalcioDM3';" >> js/config.js
-          # Aggiungi altre variabili se necessario
-        env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          echo "const PLAYERS_FOLDER = 'GIOCATORI';" >> js/config.js
+          echo "const RATINGS_FOLDER = 'VALUTAZIONI';" >> js/config.js
+          echo "const USERS_FOLDER = 'UTENTI';" >> js/config.js
+          echo "const ADMIN_USERS = ['Gianmarco Saponaro', 'Marco D\\'Amato'];" >> js/config.js
+          echo "const GITHUB_API_BASE = 'https://api.github.com/repos/' + GITHUB_USER + '/' + GITHUB_REPO + '/contents';" >> js/config.js
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+        
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+          
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./
           
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
+        id: deployment
+        uses: actions/deploy-pages@v1
