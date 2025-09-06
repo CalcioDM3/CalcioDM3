@@ -1,8 +1,7 @@
 // Gestione dell'autenticazione
-
 class AuthManager {
     constructor() {
-        this.adminUsers = ADMIN_USERS;
+        this.adminUsers = window.GITHUB_CONFIG.adminUsers;
         this.currentUser = null;
     }
 
