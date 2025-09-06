@@ -1,9 +1,8 @@
 // Gestione delle interazioni con GitHub API
-
 class GitHubManager {
     constructor() {
-        this.token = GITHUB_TOKEN;
-        this.baseUrl = GITHUB_API_BASE;
+        this.token = window.GITHUB_CONFIG.token;
+        this.baseUrl = `https://api.github.com/repos/${window.GITHUB_CONFIG.user}/${window.GITHUB_CONFIG.repo}/contents`;
         this.players = [];
         this.ratings = {};
         this.imageCache = {};
