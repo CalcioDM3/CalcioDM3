@@ -19,15 +19,19 @@ jobs:
           
       - name: Generate configuration
         run: |
-          echo "// Configurazione generata automaticamente" > js/config.js
-          echo "const GITHUB_TOKEN = '${{ secrets.ACCESS_TOKEN }}';" >> js/config.js
-          echo "const GITHUB_USER = 'CalcioDM3';" >> js/config.js
-          echo "const GITHUB_REPO = 'CalcioDM3';" >> js/config.js
-          echo "const PLAYERS_FOLDER = 'GIOCATORI';" >> js/config.js
-          echo "const RATINGS_FOLDER = 'VALUTAZIONI';" >> js/config.js
-          echo "const USERS_FOLDER = 'UTENTI';" >> js/config.js
-          echo "const ADMIN_USERS = ['Gianmarco Saponaro', 'Marco D\\'Amato'];" >> js/config.js
-          echo "const GITHUB_API_BASE = 'https://api.github.com/repos/' + GITHUB_USER + '/' + GITHUB_REPO + '/contents';" >> js/config.js
+          # Crea il file di configurazione
+          cat > js/config.js << EOF
+          // Configurazione generata automaticamente
+          window.GITHUB_CONFIG = {
+            token: '${{ secrets.ACCESS_TOKEN }}',
+            user: 'CalcioDM3',
+            repo: 'CalcioDM3',
+            playersFolder: 'GIOCATORI',
+            ratingsFolder: 'VALUTAZIONI',
+            usersFolder: 'UTENTI',
+            adminUsers: ['Gianmarco Saponaro', 'Marco D\\'Amato']
+          };
+          EOF
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
