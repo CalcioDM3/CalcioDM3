@@ -89,5 +89,6 @@ class RatingsManager {
     }
 }
 
+
 // Istanza globale del RatingsManager
-const ratingsManager = new RatingsManager();
+window.ratingsManager = new RatingsManager();
