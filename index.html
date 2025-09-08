@@ -7,6 +7,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./css/style.css">
 </head>
+<script>
+// Gestione del token dall'URL
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  
+  if (token && typeof window.GITHUB_CONFIG !== 'undefined') {
+    window.GITHUB_CONFIG.token = token;
+    console.log("Token impostato dall'URL");
+  }
+  
+  // Inizializza l'app
+  if (typeof window.app === 'undefined') {
+    window.app = new CalcioDM3App();
+    window.app.init();
+  }
+});
+</script>
 <body>
     <div id="loginPage" class="login-container">
         <div class="card w-full max-w-md mx-4">
