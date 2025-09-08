@@ -16,8 +16,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        # Aggiungi questo step dopo "Checkout repository"
-      - name: Install and build Tailwind CSS
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+      
+      - name: Install dependencies and build Tailwind CSS
         run: |
           npm install
           npm run build-css
