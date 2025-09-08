@@ -1,6 +1,7 @@
-// Configurazione di fallback per sviluppo
-if (typeof window.GITHUB_CONFIG === 'undefined') {
-  window.GITHUB_CONFIG = {
+// Configurazione sicura per GitHub Pages
+(function() {
+  // Configurazione di fallback per sviluppo
+  const defaultConfig = {
     token: '',
     user: 'CalcioDM3',
     repo: 'CalcioDM3',
@@ -9,17 +10,22 @@ if (typeof window.GITHUB_CONFIG === 'undefined') {
     usersFolder: 'UTENTI',
     adminUsers: ['Gianmarco Saponaro', 'Marco D\'Amato']
   };
-  console.warn("Configurazione di fallback attivata - Modalità sviluppo");
-}
 
-// Esporta le variabili globali per compatibilità
-const GITHUB_TOKEN = window.GITHUB_CONFIG.token;
-const GITHUB_USER = window.GITHUB_CONFIG.user;
-const GITHUB_REPO = window.GITHUB_CONFIG.repo;
-const PLAYERS_FOLDER = window.GITHUB_CONFIG.playersFolder;
-const RATINGS_FOLDER = window.GITHUB_CONFIG.ratingsFolder;
-const USERS_FOLDER = window.GITHUB_CONFIG.usersFolder;
-const ADMIN_USERS = window.GITHUB_CONFIG.adminUsers;
-const GITHUB_API_BASE = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents`;
+  // Carica la configurazione in modo sicuro
+  if (typeof window.GITHUB_CONFIG === 'undefined') {
+    window.GITHUB_CONFIG = defaultConfig;
+    console.warn("Configurazione di fallback attivata - Modalità sviluppo");
+  }
 
-console.log('Configurazione GitHub caricata:', window.GITHUB_CONFIG);
+  // Verifica che il token sia valido
+  if (window.GITHUB_CONFIG.token) {
+    console.log("Token GitHub rilevato");
+  } else {
+    console.warn("Nessun token GitHub rilevato. Funzionalità limitate.");
+  }
+
+  console.log('Configurazione GitHub caricata:', {
+    ...window.GITHUB_CONFIG,
+    token: window.GITHUB_CONFIG.token ? '***' : 'MISSING'
+  });
+})();
