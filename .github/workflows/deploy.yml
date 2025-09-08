@@ -16,6 +16,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        # Aggiungi questo step dopo "Checkout repository"
+      - name: Install and build Tailwind CSS
+        run: |
+          npm install
+          npm run build-css
           
       - name: Generate configuration
         run: |
