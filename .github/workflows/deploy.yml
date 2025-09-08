@@ -10,6 +10,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,8 +33,13 @@ jobs:
           npm install
           npm run build-css
           
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
       - name: Generate configuration
         run: |
+          # Crea la cartella js se non esiste
+          mkdir -p js
           # Crea il file di configurazione
           cat > js/config.js << 'EOF'
           // Configurazione generata automaticamente
@@ -44,6 +53,10 @@ jobs:
             adminUsers: ['Gianmarco Saponaro', 'Marco D\\'Amato']
           };
           EOF
+          
+          # Verifica che il file sia stato creato
+          echo "Contenuto di config.js:"
+          cat js/config.js
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
