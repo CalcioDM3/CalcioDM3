@@ -86,4 +86,4 @@ class PlayersManager {
 }
 
 // Istanza globale del PlayersManager
-const playersManager = new PlayersManager();
+window.playersManager = new PlayersManager();
