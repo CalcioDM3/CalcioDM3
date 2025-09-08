@@ -267,8 +267,8 @@ class GitHubManager {
         // Dati mock per sviluppo senza token
         const mockUsers = {
             "Gianmarco_Saponaro": { nome: "Gianmarco", cognome: "Saponaro", PIN: "007" },
-            "Marco_DAmato": { nome: "Marco", cognome: "D'Amato", PIN: "5678" },
-            "Test_User": { nome: "Test", cognome: "User", PIN: "0000" }
+            "Marco_DAmato": { nome: "Marco", cognome: "D'Amato", PIN: "567" },
+            "Test_User": { nome: "Test", cognome: "User", PIN: "000" }
         };
         
         const key = `${nome}_${cognome}`.replace(' ', '_');
