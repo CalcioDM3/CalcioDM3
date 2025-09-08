@@ -11,21 +11,28 @@
     adminUsers: ['Gianmarco Saponaro', 'Marco D\'Amato']
   };
 
-  // Carica la configurazione in modo sicuro
-  if (typeof window.GITHUB_CONFIG === 'undefined') {
-    window.GITHUB_CONFIG = defaultConfig;
-    console.warn("Configurazione di fallback attivata - Modalità sviluppo");
-  }
+  // Cerca il token nei secrets di GitHub Pages
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('token');
+  
+  // Configurazione finale
+  const finalConfig = {
+    ...defaultConfig,
+    token: tokenFromUrl || defaultConfig.token
+  };
 
-  // Verifica che il token sia valido
-  if (window.GITHUB_CONFIG.token) {
-    console.log("Token GitHub rilevato");
-  } else {
+  // Imposta la configurazione globale
+  window.GITHUB_CONFIG = finalConfig;
+
+  // Log di debug
+  if (!finalConfig.token) {
     console.warn("Nessun token GitHub rilevato. Funzionalità limitate.");
+  } else {
+    console.log("Token GitHub rilevato");
   }
 
   console.log('Configurazione GitHub caricata:', {
-    ...window.GITHUB_CONFIG,
-    token: window.GITHUB_CONFIG.token ? '***' : 'MISSING'
+    ...finalConfig,
+    token: finalConfig.token ? '***' : 'MISSING'
   });
 })();
