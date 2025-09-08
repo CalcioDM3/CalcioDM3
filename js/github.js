@@ -137,7 +137,7 @@ class GitHubManager {
             
             const safeName = ratingsData.valutatore.replace(/[^a-zA-Z0-9]/g, '_');
             const filename = `Valutazioni_${safeName}.json`;
-            const path = `${RATINGS_FOLDER}/${filename}`;
+            const path = `${window.GITHUB_CONFIG?.ratingsFolder || 'VALUTAZIONI'}/${filename}`;
             
             // Controlla se il file esiste già
             let sha = null;
@@ -156,6 +156,8 @@ class GitHubManager {
             
             // Prepara i dati per l'upload
             const content = JSON.stringify(ratingsData, null, 2);
+            
+            // Codifica in base64 in modo sicuro (senza eval)
             const contentBase64 = btoa(unescape(encodeURIComponent(content)));
             
             const payload = {
@@ -196,7 +198,7 @@ class GitHubManager {
             
             const safeName = username.replace(/[^a-zA-Z0-9]/g, '_');
             const filename = `Valutazioni_${safeName}.json`;
-            const path = `${RATINGS_FOLDER}/${filename}`;
+            const path = `${window.GITHUB_CONFIG?.ratingsFolder || 'VALUTAZIONI'}/${filename}`;
             
             const response = await fetch(`${this.baseUrl}/${path}`, {
                 headers: await this.getHeaders()
@@ -204,8 +206,16 @@ class GitHubManager {
             
             if (response.ok) {
                 const fileData = await response.json();
-                const content = JSON.parse(atob(fileData.content));
-                return content;
+                
+                // Decodifica base64 in modo sicuro (senza eval)
+                try {
+                    const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
+                    const content = JSON.parse(decodedContent);
+                    return content;
+                } catch (parseError) {
+                    console.error("Errore nel parsing del contenuto:", parseError);
+                    return { valutatore: username, valutazioni: {}, timestamp: new Date().toISOString() };
+                }
             } else if (response.status === 404) {
                 // Il file non esiste, restituisci oggetto vuoto
                 return { valutatore: username, valutazioni: {}, timestamp: new Date().toISOString() };
@@ -226,7 +236,7 @@ class GitHubManager {
             }
             
             const filename = `${nome}_${cognome}.json`;
-            const path = `${USERS_FOLDER}/${filename}`;
+            const path = `${window.GITHUB_CONFIG?.usersFolder || 'UTENTI'}/${filename}`;
             
             const response = await fetch(`${this.baseUrl}/${path}`, {
                 headers: await this.getHeaders()
@@ -234,8 +244,16 @@ class GitHubManager {
             
             if (response.ok) {
                 const fileData = await response.json();
-                const content = JSON.parse(atob(fileData.content));
-                return content;
+                
+                // Decodifica base64 in modo sicuro (senza eval)
+                try {
+                    const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
+                    const content = JSON.parse(decodedContent);
+                    return content;
+                } catch (parseError) {
+                    console.error("Errore nel parsing delle credenziali:", parseError);
+                    return null;
+                }
             } else {
                 return null;
             }
