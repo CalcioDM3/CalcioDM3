@@ -26,11 +26,13 @@
   window.GITHUB_CONFIG = window.GITHUB_CONFIG || {};
   
   // Merge con la configurazione di default
-  Object.keys(defaultConfig).forEach(key => {
+  const configKeys = Object.keys(defaultConfig);
+  for (let i = 0; i < configKeys.length; i++) {
+    const key = configKeys[i];
     if (window.GITHUB_CONFIG[key] === undefined) {
       window.GITHUB_CONFIG[key] = defaultConfig[key];
     }
-  });
+  }
 
   // Sovrascrivi il token se presente nell'URL
   const urlToken = getTokenFromURL();
@@ -40,7 +42,12 @@
   }
 
   console.log('Configurazione caricata:', {
-    ...window.GITHUB_CONFIG,
+    user: window.GITHUB_CONFIG.user,
+    repo: window.GITHUB_CONFIG.repo,
+    playersFolder: window.GITHUB_CONFIG.playersFolder,
+    ratingsFolder: window.GITHUB_CONFIG.ratingsFolder,
+    usersFolder: window.GITHUB_CONFIG.usersFolder,
+    adminUsers: window.GITHUB_CONFIG.adminUsers,
     token: window.GITHUB_CONFIG.token ? '***' : 'MISSING'
   });
 })();
