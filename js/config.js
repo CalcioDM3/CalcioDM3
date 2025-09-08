@@ -20,3 +20,5 @@ const RATINGS_FOLDER = window.GITHUB_CONFIG.ratingsFolder;
 const USERS_FOLDER = window.GITHUB_CONFIG.usersFolder;
 const ADMIN_USERS = window.GITHUB_CONFIG.adminUsers;
 const GITHUB_API_BASE = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents`;
+
+console.log('Configurazione GitHub:', window.GITHUB_CONFIG);
