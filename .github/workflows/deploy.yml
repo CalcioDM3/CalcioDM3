@@ -51,11 +51,13 @@ jobs:
             };
             
             window.GITHUB_CONFIG = window.GITHUB_CONFIG || {};
-            Object.keys(defaultConfig).forEach(key => {
+            const configKeys = Object.keys(defaultConfig);
+            for (let i = 0; i < configKeys.length; i++) {
+              const key = configKeys[i];
               if (window.GITHUB_CONFIG[key] === undefined) {
                 window.GITHUB_CONFIG[key] = defaultConfig[key];
               }
-            });
+            }
             
             console.log('Configurazione GitHub caricata con token incorporato');
           })();
