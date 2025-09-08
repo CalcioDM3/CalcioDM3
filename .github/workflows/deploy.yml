@@ -20,7 +20,7 @@ jobs:
       - name: Generate configuration
         run: |
           # Crea il file di configurazione
-          cat > js/config.js << EOF
+          cat > js/config.js << 'EOF'
           // Configurazione generata automaticamente
           window.GITHUB_CONFIG = {
             token: '${{ secrets.ACCESS_TOKEN }}',
