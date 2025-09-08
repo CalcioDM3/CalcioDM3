@@ -1,119 +1,22 @@
-:root {
-    --primary-color: #A5E090;
-    --secondary-color: #4CAF50;
-}
-
+/* File CSS temporaneo per sviluppo locale */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f0f9f0;
-}
-
-.login-container {
-    background: linear-gradient(135deg, #A5E090 0%, #7cc456 100%);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-}
-
-.logo-container {
-    background: linear-gradient(to right, #3a7e3a, #4CAF50);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .btn-primary {
-    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-    transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-.sidebar {
-    background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
-    color: white;
-    width: 250px;
-    min-height: 100vh;
-}
-
-.menu-item {
-    transition: all 0.3s ease;
-    border-left: 4px solid transparent;
-}
-
-.menu-item:hover, .menu-item.active {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-left: 4px solid white;
+  background: linear-gradient(to right, #A5E090, #4CAF50);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
 }
 
 .card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 }
 
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.player-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 3px solid var(--primary-color);
-}
-
-.player-card {
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.player-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        min-height: auto;
-    }
-    
-    .main-content {
-        margin-left: 0 !important;
-    }
-}
-
-.skill-slider {
-    width: 100%;
-    margin: 10px 0;
-}
-
-.loading-spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255,255,255,.3);
-    border-radius: 50%;
-    border-top-color: #fff;
-    animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.hidden {
-    display: none;
-}
+/* Aggiungi altri stili essenziali qui */
