@@ -13,7 +13,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: production  # Aggiungi questa linea :cite[2]
+    environment: production
     
     steps:
       - name: Checkout repository
@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: package-look.json
       
       - name: Install dependencies
         run: |
@@ -53,15 +53,18 @@ jobs:
             };
             
             window.GITHUB_CONFIG = window.GITHUB_CONFIG || {};
-            const configKeys = Object.keys(defaultConfig);
-            for (let i = 0; i < configKeys.length; i++) {
-              const key = configKeys[i];
+            Object.keys(defaultConfig).forEach(key => {
               if (window.GITHUB_CONFIG[key] === undefined) {
                 window.GITHUB_CONFIG[key] = defaultConfig[key];
               }
-            }
+            });
             
-            console.log('Configurazione GitHub caricata con token incorporato');
+            // Verifica che il token sia valido
+            if (window.GITHUB_CONFIG.token) {
+              console.log('Token GitHub configurato correttamente');
+            } else {
+              console.warn('Token GitHub non disponibile');
+            }
           })();
           EOF
       
