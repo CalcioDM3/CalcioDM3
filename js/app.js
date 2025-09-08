@@ -128,6 +128,60 @@ class CalcioDM3App {
             loginButton.disabled = false;
         }
     }
+    // Aggiungi questa funzione alla classe CalcioDM3App
+async handlePostLogin() {
+  try {
+    // Verifica se siamo su GitHub Pages
+    if (window.location.hostname.includes('github.io')) {
+      // Reindirizza alla dashboard con il token
+      const token = window.GITHUB_CONFIG.token;
+      if (token) {
+        window.location.href = `${window.location.origin}${window.location.pathname}?token=${token}`;
+        return;
+      }
+    }
+    
+    // Altrimenti procedi normalmente
+    this.showApp();
+    await this.loadDashboard();
+    this.showNotification("Accesso effettuato con successo!", "success");
+  } catch (error) {
+    console.error("Errore nel post-login:", error);
+    this.showNotification("Errore durante l'accesso", "error");
+  }
+}
+
+async handleLogin() {
+  const nome = document.getElementById('nome').value.trim();
+  const cognome = document.getElementById('cognome').value.trim();
+  const pin = document.getElementById('pin').value.trim();
+  
+  if (!nome || !cognome || !pin) {
+    this.showNotification("Inserisci nome, cognome e PIN", "error");
+    return;
+  }
+  
+  const loginButton = document.querySelector('#loginForm button[type="submit"]');
+  const originalText = loginButton.innerHTML;
+  loginButton.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Accesso in corso...';
+  loginButton.disabled = true;
+  
+  try {
+    const result = await this.authManager.login(nome, cognome, pin);
+    
+    if (result.success) {
+      await this.handlePostLogin();
+    } else {
+      this.showNotification(result.error, "error");
+    }
+  } catch (error) {
+    console.error("Errore durante l'accesso:", error);
+    this.showNotification("Errore durante l'accesso", "error");
+  } finally {
+    loginButton.innerHTML = originalText;
+    loginButton.disabled = false;
+  }
+}
 
     showLogin() {
         const loginPage = document.getElementById('loginPage');
