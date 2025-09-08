@@ -4,7 +4,7 @@
   "description": "CalcioDM3 Companion Web App",
   "main": "index.js",
   "scripts": {
-    "build-css": "tailwindcss -i ./src/input.css -o ./css/style.css --watch"
+    "build-css": "tailwindcss -i ./src/input.css -o ./css/style.css --minify"
   },
   "devDependencies": {
     "tailwindcss": "^3.3.0"
