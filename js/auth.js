@@ -62,4 +62,4 @@ class AuthManager {
 }
 
 // Istanza globale dell'AuthManager
-const authManager = new AuthManager();
+window.authManager = new AuthManager();
