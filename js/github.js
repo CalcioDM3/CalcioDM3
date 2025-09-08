@@ -264,3 +264,5 @@ class GitHubManager {
 
 // Istanza globale del GitHubManager
 const githubManager = new GitHubManager();
+// Istanza globale del GitHubManager
+window.githubManager = new GitHubManager();
