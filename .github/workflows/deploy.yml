@@ -35,8 +35,9 @@ jobs:
           cat > js/config.js << 'EOF'
           // Configurazione generata automaticamente
           (function() {
-            const config = {
-              token: '${{ secrets.ACCESS_TOKEN }}',
+            // Configurazione di fallback per sviluppo
+            const defaultConfig = {
+              token: '',
               user: 'CalcioDM3',
               repo: 'CalcioDM3',
               playersFolder: 'GIOCATORI',
@@ -44,12 +45,24 @@ jobs:
               usersFolder: 'UTENTI',
               adminUsers: ['Gianmarco Saponaro', 'Marco D\\'Amato']
             };
+
+            // Cerca il token nei secrets di GitHub Pages
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenFromUrl = urlParams.get('token');
             
-            if (typeof window.GITHUB_CONFIG === 'undefined') {
-              window.GITHUB_CONFIG = config;
-            }
-            
-            console.log('Configurazione GitHub caricata con successo');
+            // Configurazione finale
+            const finalConfig = {
+              ...defaultConfig,
+              token: tokenFromUrl || '${{ secrets.ACCESS_TOKEN }}' || defaultConfig.token
+            };
+
+            // Imposta la configurazione globale
+            window.GITHUB_CONFIG = finalConfig;
+
+            console.log('Configurazione GitHub caricata:', {
+              ...finalConfig,
+              token: finalConfig.token ? '***' : 'MISSING'
+            });
           })();
           EOF
       
