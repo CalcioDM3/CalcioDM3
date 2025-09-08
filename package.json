@@ -1,0 +1,12 @@
+{
+  "name": "calciodm3",
+  "version": "1.0.0",
+  "description": "CalcioDM3 Companion Web App",
+  "main": "index.js",
+  "scripts": {
+    "build-css": "tailwindcss -i ./src/input.css -o ./css/style.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.3.0"
+  }
+}
