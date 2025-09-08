@@ -1,8 +1,8 @@
 // Gestione delle interazioni con GitHub API
 class GitHubManager {
     constructor() {
-        this.token = window.GITHUB_CONFIG.token;
-        this.baseUrl = `https://api.github.com/repos/${window.GITHUB_CONFIG.user}/${window.GITHUB_CONFIG.repo}/contents`;
+        this.token = window.GITHUB_CONFIG?.token || '';
+        this.baseUrl = `https://api.github.com/repos/${window.GITHUB_CONFIG?.user || 'CalcioDM3'}/${window.GITHUB_CONFIG?.repo || 'CalcioDM3'}/contents`;
         this.players = [];
         this.ratings = {};
         this.imageCache = {};
@@ -23,7 +23,7 @@ class GitHubManager {
 
     async testConnection() {
         try {
-            const response = await fetch(`${this.baseUrl}/${PLAYERS_FOLDER}`, {
+            const response = await fetch(`${this.baseUrl}`, {
                 headers: await this.getHeaders()
             });
             return response.status === 200;
@@ -35,40 +35,49 @@ class GitHubManager {
 
     async loadPlayers() {
         try {
-            const response = await fetch(`${this.baseUrl}/${PLAYERS_FOLDER}`, {
+            const playersFolder = window.GITHUB_CONFIG?.playersFolder || 'GIOCATORI';
+            const response = await fetch(`${this.baseUrl}/${playersFolder}`, {
                 headers: await this.getHeaders()
             });
             
             if (!response.ok) {
+                if (response.status === 404) {
+                    console.error("Cartella giocatori non trovata sul repository");
+                }
                 throw new Error(`Errore HTTP: ${response.status}`);
             }
             
             const files = await response.json();
             this.players = [];
             
-            for (const file of files) {
-                if (file.name.endsWith('.json')) {
-                    try {
-                        const contentResponse = await fetch(file.download_url);
-                        if (contentResponse.ok) {
-                            const playerData = await contentResponse.json();
-                            
-                            // Cerca l'immagine associata
-                            const baseName = file.name.replace('.json', '');
-                            const imgFile = files.find(f => 
-                                f.name.startsWith(baseName) && 
-                                /\.(png|jpg|jpeg)$/i.test(f.name)
-                            );
-                            
-                            if (imgFile) {
-                                playerData.image_url = imgFile.download_url;
+            // Se files è un array, procedi con l'elaborazione
+            if (Array.isArray(files)) {
+                for (const file of files) {
+                    if (file.name.endsWith('.json')) {
+                        try {
+                            const contentResponse = await fetch(file.download_url);
+                            if (contentResponse.ok) {
+                                const playerData = await contentResponse.json();
+                                
+                                // Cerca l'immagine associata
+                                const baseName = file.name.replace('.json', '');
+                                const imgFile = files.find(f => 
+                                    f.name.startsWith(baseName) && 
+                                    /\.(png|jpg|jpeg|gif)$/i.test(f.name)
+                                );
+                                
+                                if (imgFile) {
+                                    playerData.image_url = imgFile.download_url;
+                                } else {
+                                    playerData.image_url = "https://via.placeholder.com/150?text=" + encodeURIComponent(playerData.nome + " " + playerData.cognome);
+                                }
+                                
+                                playerData.id = baseName; // Usa il nome file come ID
+                                this.players.push(playerData);
                             }
-                            
-                            playerData.id = this.players.length + 1;
-                            this.players.push(playerData);
+                        } catch (e) {
+                            console.error(`Errore nel caricamento del giocatore ${file.name}:`, e);
                         }
-                    } catch (e) {
-                        console.error(`Errore nel caricamento del giocatore ${file.name}:`, e);
                     }
                 }
             }
@@ -82,9 +91,9 @@ class GitHubManager {
             if (!this.token) {
                 console.warn("Token non disponibile, uso dati mock");
                 this.players = [
-                    { id: 1, nome: "Mario", cognome: "Rossi", image_url: "https://via.placeholder.com/150" },
-                    { id: 2, nome: "Luigi", cognome: "Bianchi", image_url: "https://via.placeholder.com/150" },
-                    { id: 3, nome: "Giuseppe", cognome: "Verdi", image_url: "https://via.placeholder.com/150" }
+                    { id: 1, nome: "Mario", cognome: "Rossi", image_url: "https://via.placeholder.com/150?text=Mario+Rossi" },
+                    { id: 2, nome: "Luigi", cognome: "Bianchi", image_url: "https://via.placeholder.com/150?text=Luigi+Bianchi" },
+                    { id: 3, nome: "Giuseppe", cognome: "Verdi", image_url: "https://via.placeholder.com/150?text=Giuseppe+Verdi" }
                 ];
                 return this.players;
             }
